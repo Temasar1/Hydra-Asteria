@@ -17,3 +17,6 @@ target
 node_modules/
 
 lib/
+
+mesh-sdk/dist
+mesh-sdk/node_modules
