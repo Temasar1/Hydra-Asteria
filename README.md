@@ -1,6 +1,6 @@
 # Hydra-Asteria
 
-A Cardano bot challenge to showcase the capabilities of eUTXO capabilities with Hydra built with Mesh hydra tools.
+A Cardano bot challenge to showcase the capabilities of eUTXO and Hydra fast transaction throughput built with Mesh hydra tools.
 
 ## Mechanics
 
