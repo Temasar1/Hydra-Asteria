@@ -1,6 +1,6 @@
-# Asteria
+# Hydra-Asteria
 
-A Cardano bot challenge to showcase the capabilities of the eUTxO model.
+A Cardano bot challenge to showcase the capabilities of eUTXO capabilities with Hydra built with Mesh hydra tools.
 
 ## Mechanics
 
@@ -27,6 +27,11 @@ A unique UTxO will be place at the center of the grid to hold the rewards for th
 ## Backstory
 
 // TODO
+
+
+## Hydra head with Mesh
+
+TO DO
 
 ## Getting started
 
