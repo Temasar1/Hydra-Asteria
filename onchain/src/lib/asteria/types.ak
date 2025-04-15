@@ -1,7 +1,11 @@
+use aiken/crypto.{Blake2b_224, Hash, Script}
 use cardano/assets.{AssetName, PolicyId}
 
 pub type PosixTime =
   Int
+
+pub type ScriptAddress =
+  Hash<Blake2b_224, Script>
 
 pub type AssetClass {
   policy: PolicyId,

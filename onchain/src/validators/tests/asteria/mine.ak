@@ -2,13 +2,11 @@ use aiken/collection/dict
 use aiken/interval.{Finite, Interval, IntervalBound}
 use asteria
 use asteria/test_mock as mock
-use asteria/types.{AssetClass, AsteriaDatum, Mine, MineAsteria, ShipDatum}
+use asteria/types.{AssetClass, AsteriaDatum, Mine}
 use cardano/address.{Address, Script}
-use cardano/assets.{
-  ada_asset_name, ada_policy_id, add, from_asset, from_lovelace, zero,
-}
+use cardano/assets.{ada_asset_name, ada_policy_id, add, from_lovelace, zero}
 use cardano/transaction.{
-  InlineDatum, Input, Output, OutputReference, Spend, Transaction,
+  InlineDatum, Input, NoDatum, Output, OutputReference, Spend, Transaction,
 }
 
 // ==============================================================================================
@@ -19,12 +17,6 @@ type MineTestOptions {
   lovelace_mined: Int,
   preserve_counter: Bool,
   include_ship_token: Bool,
-  // fields from spacetime/mine_asteria:MineTestOptions
-  ship_pos_x: Int,
-  ship_pos_y: Int,
-  burns_ship_token: Bool,
-  burns_fuel_tokens: Bool,
-  respects_latest_time: Bool,
 }
 
 fn default_mine_options() {
@@ -32,28 +24,13 @@ fn default_mine_options() {
     lovelace_mined: 6_000_000,
     preserve_counter: True,
     include_ship_token: True,
-    // fields from spacetime/mine_asteria:MineTestOptions
-    ship_pos_x: 0,
-    ship_pos_y: 0,
-    burns_ship_token: True,
-    burns_fuel_tokens: True,
-    respects_latest_time: True,
   }
 }
 
 fn mine(options: MineTestOptions) -> Bool {
-  let ship_fuel = 30
   let ship_mint_lovelace_fee = 2_000
   let max_asteria_mining = 50
   let ship_counter = 7
-  let earliest_time =
-    if options.respects_latest_time {
-      10_000
-    } else {
-      0
-    }
-  let latest_time = earliest_time + 20_000
-  let last_move_latest_time = 5_000
   let admin_token =
     AssetClass { policy: mock.admin_policy, name: mock.admin_token_name }
   let redeemer = Mine
@@ -86,18 +63,8 @@ fn mine(options: MineTestOptions) -> Bool {
     if options.include_ship_token {
       from_lovelace(2_000_000)
         |> add(mock.shipyard_policy, mock.ship_token_name, 1)
-        |> add(mock.pellet_credential, "FUEL", ship_fuel)
     } else {
       from_lovelace(2_000_000)
-        |> add(mock.pellet_credential, "FUEL", ship_fuel)
-    }
-  let ship_datum =
-    ShipDatum {
-      pos_x: options.ship_pos_x,
-      pos_y: options.ship_pos_y,
-      ship_token_name: mock.ship_token_name,
-      pilot_token_name: mock.pilot_token_name,
-      last_move_latest_time,
     }
 
   let ship_in = {
@@ -105,7 +72,7 @@ fn mine(options: MineTestOptions) -> Bool {
       Output {
         address: ship_address,
         value: ship_value,
-        datum: InlineDatum(ship_datum),
+        datum: NoDatum,
         reference_script: None,
       }
     let output_reference =
@@ -132,42 +99,27 @@ fn mine(options: MineTestOptions) -> Bool {
       reference_inputs: [],
       outputs: [asteria_out],
       fee: 5_000,
-      mint: if options.burns_ship_token {
-        if options.burns_fuel_tokens {
-          from_asset(mock.shipyard_policy, mock.ship_token_name, -1)
-            |> add(mock.pellet_credential, "FUEL", -ship_fuel)
-        } else {
-          from_asset(mock.shipyard_policy, mock.ship_token_name, -1)
-        }
-      } else {
-        zero
-      },
+      mint: zero,
       certificates: [],
       withdrawals: [],
       validity_range: Interval {
-        lower_bound: IntervalBound {
-          bound_type: Finite(earliest_time),
-          is_inclusive: True,
-        },
+        lower_bound: IntervalBound { bound_type: Finite(1), is_inclusive: True },
         upper_bound: IntervalBound {
-          bound_type: Finite(latest_time),
+          bound_type: Finite(10),
           is_inclusive: True,
         },
       },
       extra_signatories: [],
-      // FIXME: Two mint redeemers missing here!
       redeemers: [
         Pair(
-          Spend(asteria_in.output_reference),
+          Spend(
+            OutputReference {
+              transaction_id: mock.transaction_id_1,
+              output_index: 0,
+            },
+          ),
           {
-            let redeemer_data: Data = Mine
-            redeemer_data
-          },
-        ),
-        Pair(
-          Spend(ship_in.output_reference),
-          {
-            let redeemer_data: Data = MineAsteria
+            let redeemer_data: Data = redeemer
             redeemer_data
           },
         ),
@@ -186,19 +138,14 @@ fn mine(options: MineTestOptions) -> Bool {
       current_treasury_amount: None,
       treasury_donation: None,
     }
-  let min_distance = 10
-  let initial_fuel = 480
   let result =
     asteria.asteria.spend(
-      mock.pellet_credential,
       admin_token,
       ship_mint_lovelace_fee,
       max_asteria_mining,
-      min_distance,
-      initial_fuel,
       Some(asteria_datum),
       redeemer,
-      asteria_in.output_reference,
+      OutputReference { transaction_id: mock.transaction_id_1, output_index: 0 },
       tx,
     )
   result
@@ -218,26 +165,4 @@ test exceed_mining() fail {
 
 test alter_counter() fail {
   mine(MineTestOptions { ..default_mine_options(), preserve_counter: False })
-}
-
-test wrong_x_pos() fail {
-  mine(MineTestOptions { ..default_mine_options(), ship_pos_x: 1 })
-}
-
-test wrong_y_pos() fail {
-  mine(MineTestOptions { ..default_mine_options(), ship_pos_y: 1 })
-}
-
-test ship_token_not_burnt() fail {
-  mine(MineTestOptions { ..default_mine_options(), burns_ship_token: False })
-}
-
-test fuel_tokens_not_burnt() fail {
-  mine(MineTestOptions { ..default_mine_options(), burns_fuel_tokens: False })
-}
-
-test no_respect_latest_time() fail {
-  mine(
-    MineTestOptions { ..default_mine_options(), respects_latest_time: False },
-  )
 }

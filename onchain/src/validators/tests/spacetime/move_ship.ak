@@ -1,6 +1,5 @@
 use aiken/collection/dict
 use aiken/interval.{Finite, Interval, IntervalBound}
-use aiken/math.{max}
 use asteria/test_mock as mock
 use asteria/types.{AssetClass, MoveShip, ShipDatum, Speed}
 use asteria/utils.{distance}
@@ -30,6 +29,7 @@ type MoveTestOptions {
   subtracts_spent_fuel: Bool,
   updates_latest_time: Bool,
   respects_latest_time: Bool,
+  excludes_extra_script_input: Bool,
   burns_spent_fuel: Bool,
 }
 
@@ -49,6 +49,7 @@ fn default_move_options() {
     subtracts_spent_fuel: True,
     updates_latest_time: True,
     respects_latest_time: True,
+    excludes_extra_script_input: True,
     burns_spent_fuel: True,
   }
 }
@@ -60,6 +61,8 @@ fn move(options: MoveTestOptions) -> Bool {
   let fuel_per_step = 1
   let required_fuel = fuel_per_step * distance(options.delta_x, options.delta_y)
   let max_ship_fuel = 100
+  let initial_pellet_fuel = 40
+  let min_asteria_distance = 10
   let max_speed = Speed { distance: 1, time: 1_000 }
   let earliest_time =
     if options.respects_latest_time {
@@ -93,11 +96,7 @@ fn move(options: MoveTestOptions) -> Bool {
           mock.ship_token_name,
           options.output_ship_token_amount,
         )
-      |> add(
-          mock.pellet_credential,
-          "FUEL",
-          max(options.initial_fuel - required_fuel, 0),
-        )
+      |> add(mock.pellet_credential, "FUEL", options.initial_fuel - required_fuel)
       |> add("aaaa", "tokenA", options.extra_token_amount)
   let ship_input_datum =
     ShipDatum {
@@ -131,6 +130,21 @@ fn move(options: MoveTestOptions) -> Bool {
         last_move_latest_time
       },
     }
+  let extra_script_input = {
+    let output =
+      Output {
+        address: Address {
+          payment_credential: Script("7777"),
+          stake_credential: None,
+        },
+        value: zero,
+        datum: NoDatum,
+        reference_script: None,
+      }
+    let output_reference =
+      OutputReference { transaction_id: mock.transaction_id_1, output_index: 0 }
+    Input { output_reference, output }
+  }
   let ship_input = {
     let output =
       Output {
@@ -176,7 +190,11 @@ fn move(options: MoveTestOptions) -> Bool {
     }
   let tx =
     Transaction {
-      inputs: [ship_input, pilot_input],
+      inputs: if options.excludes_extra_script_input {
+        [ship_input, pilot_input]
+      } else {
+        [ship_input, pilot_input, extra_script_input]
+      },
       reference_inputs: [],
       outputs: if options.includes_ship_output {
         [ship_output]
@@ -238,6 +256,8 @@ fn move(options: MoveTestOptions) -> Bool {
       max_speed,
       max_ship_fuel,
       fuel_per_step,
+      initial_pellet_fuel,
+      min_asteria_distance,
       Some(ship_input_datum),
       redeemer,
       OutputReference { transaction_id: mock.transaction_id_1, output_index: 0 },
@@ -248,6 +268,15 @@ fn move(options: MoveTestOptions) -> Bool {
 
 test move_ok() {
   move(default_move_options())
+}
+
+test more_than_1_script_input() fail {
+  move(
+    MoveTestOptions {
+      ..default_move_options(),
+      excludes_extra_script_input: False,
+    },
+  )
 }
 
 test no_ship_output() fail {
