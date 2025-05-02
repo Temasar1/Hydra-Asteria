@@ -18,7 +18,8 @@ export default function Start() {
     const [grid, setGrid] = useState<{ x: number; y: number; content: string | null }[][]>(generateGrid());
     const [inputValue, setInputValue] = useState("");
     const [selectedCell, setSelectedCell] = useState<{ x: number; y: number } | null>(null);
-   // const [zoom, setZoom] = useState(100); // State to manage zoom level
+   const [zoom, setZoom] = useState(1); // State to manage zoom level
+
 
     const handleCellClick = (x: number, y: number) => {
         setSelectedCell({ x, y });
@@ -65,7 +66,7 @@ export default function Start() {
                     backgroundSize: "cover",
                     backgroundPosition: "center",
                     backgroundRepeat: "no-repeat",
-                    //transform: `scale(${zoom})`, // Apply zoom level
+                    transform: `scale(${zoom})`, // Apply zoom level
                     transformOrigin: "center", // Zoom from the center
                 }}
             >
