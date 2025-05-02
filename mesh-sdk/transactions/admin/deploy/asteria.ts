@@ -51,10 +51,10 @@ async function deployAsteria(){
     const signedTx = await myWallet.signTx(unsignedTx);
     const deployAsteriaTx = await myWallet.submitTx(signedTx);
     
-console.log(await writeFile(
+await writeFile(
     "./scriptref-hash/asteria-script.json",
-    JSON.stringify({ asteriaTxHash: deployAsteriaTx}, null, 2)
-   ));
+    JSON.stringify({ txHash: deployAsteriaTx })
+  );
 };
 
 export {deployAsteria};

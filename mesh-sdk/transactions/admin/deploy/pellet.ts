@@ -44,12 +44,12 @@ async function deployPellet(){
     .complete();
     
     const signedTx = await myWallet.signTx(unsignedTx);
-    const deploypelletTx = await myWallet.submitTx(signedTx);
+    const deployPelletTx = await myWallet.submitTx(signedTx);
 
-console.log(await writeFile(
-        "./scriptref-hash/pellet-script.json",
-        JSON.stringify({ pelletTxHash: deploypelletTx }, null, 2)
-    ));
+await writeFile(
+    "./scriptref-hash/pellet-script.json",
+    JSON.stringify({ txHash: deployPelletTx })
+    );
 };
 
 export {deployPellet};

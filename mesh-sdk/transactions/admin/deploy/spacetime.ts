@@ -18,27 +18,26 @@ import {
 import { deployScriptAppliedParam } from "../apply-param/deploy.js";
 import { resolvePlutusScriptAddress} from "@meshsdk/core-csl";
 import { spacetimeScriptAppliedParam } from "../apply-param/spacetime.js";
-import { writeFile,readFile } from "fs/promises";
+import { readFile, writeFile} from "fs/promises";
+
 
 const utxos = await myWallet.getUtxos();
 const changeAddress = await myWallet.getChangeAddress();
 
-//read asteria script ref json file
-const asteria = JSON.parse(
+
+const asteriaDeployScript = JSON.parse(
     await readFile("./scriptref-hash/asteria-script.json", "utf-8"));
-if(!asteria.asteriaTxHash){
+if(!asteriaDeployScript.txHash){
     throw Error ("asteria script-ref not found, deploy asteria first.");
 };
-
-//read pellet script ref json file
-const pellet = JSON.parse(
+const pelletDeployScript = JSON.parse(
     await readFile("./scriptref-hash/pellet-script.json", "utf-8"));
-if(!pellet.pelletTxHash){
+if(!pelletDeployScript.txHash){
     throw Error ("pellet script-ref not found, deploy pellet first.");
 };
 
-const asteriaScriptUtxo = await blockchainProvider.fetchUTxOs(await asteria.asteriaTxHash,0);
-const pelletScriptUtxo = await blockchainProvider.fetchUTxOs(await pellet.pelletTxHash,0);
+const asteriaScriptUtxo = await blockchainProvider.fetchUTxOs(asteriaDeployScript.txHash,0);
+const pelletScriptUtxo = await blockchainProvider.fetchUTxOs(pelletDeployScript.txHash,0);
 
 //parameterize hash instead of address 
 
@@ -60,7 +59,6 @@ const spacetimeScript = spacetimeScriptAppliedParam(
     initial_fuel,
     min_asteria_distance
 );
-
 
 const spacetimeAsset: Asset[] = [
     {
@@ -87,10 +85,10 @@ async function deploySpacetime(){
     const signedTx = await myWallet.signTx(unsignedTx);
     const deploySpacetimeTx = await myWallet.submitTx(signedTx);
     
-console.log(await writeFile(
-    "./scriptRef-hash/spacetime-script.json",
-    JSON.stringify({ spacetimeTxHash: deploySpacetimeTx}, null, 2)
-   ));
+await writeFile(
+        "./scriptref-hash/spacetime-script.json",
+        JSON.stringify({ txHash: deploySpacetimeTx })
+      );
 };
 
 export {deploySpacetime};
