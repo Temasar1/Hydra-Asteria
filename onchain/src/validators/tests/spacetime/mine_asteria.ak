@@ -1,7 +1,7 @@
 use aiken/collection/dict
 use aiken/interval.{Finite, Interval, IntervalBound}
 use asteria/test_mock as mock
-use asteria/types.{AssetClass, MineAsteria, ShipDatum, Speed}
+use asteria/types.{AssetClass, Mine, MineAsteria, ShipDatum, Speed}
 use cardano/address.{Address, Script, VerificationKey}
 use cardano/assets.{add, from_asset, from_lovelace, zero}
 use cardano/transaction.{
@@ -23,7 +23,7 @@ type MineTestOptions {
   burns_ship_token: Bool,
   burns_fuel_tokens: Bool,
   respects_latest_time: Bool,
-  excludes_extra_script_input: Bool,
+  excludes_extra_asteria_input: Bool,
 }
 
 fn default_mine_options() {
@@ -37,7 +37,7 @@ fn default_mine_options() {
     burns_ship_token: True,
     burns_fuel_tokens: True,
     respects_latest_time: True,
-    excludes_extra_script_input: True,
+    excludes_extra_asteria_input: True,
   }
 }
 
@@ -45,9 +45,7 @@ fn mine(options: MineTestOptions) -> Bool {
   let min_ada = from_lovelace(2_000_000)
   let fuel_per_step = 1
   let max_ship_fuel = 100
-  let initial_fuel = 40
   let ship_fuel = 30
-  let min_distance = 10
   let max_speed = Speed { distance: 1, time: 1_000 }
   let earliest_time =
     if options.respects_latest_time {
@@ -132,13 +130,10 @@ fn mine(options: MineTestOptions) -> Bool {
       OutputReference { transaction_id: mock.transaction_id_1, output_index: 1 }
     Input { output_reference, output }
   }
-  let extra_script_input = {
+  let extra_asteria_input = {
     let output =
       Output {
-        address: Address {
-          payment_credential: Script("7777"),
-          stake_credential: None,
-        },
+        address: asteria_address,
         value: zero,
         datum: NoDatum,
         reference_script: None,
@@ -150,10 +145,10 @@ fn mine(options: MineTestOptions) -> Bool {
   let tx =
     Transaction {
       inputs: if options.includes_asteria_input {
-        if options.excludes_extra_script_input {
+        if options.excludes_extra_asteria_input {
           [ship_input, pilot_input, asteria_input]
         } else {
-          [ship_input, pilot_input, asteria_input, extra_script_input]
+          [ship_input, pilot_input, asteria_input, extra_asteria_input]
         }
       } else {
         [ship_input, pilot_input]
@@ -184,16 +179,19 @@ fn mine(options: MineTestOptions) -> Bool {
         },
       },
       extra_signatories: [],
+      // FIXME: Two mint redeemers missing here!
       redeemers: [
         Pair(
-          Spend(
-            OutputReference {
-              transaction_id: mock.transaction_id_1,
-              output_index: 0,
-            },
-          ),
+          Spend(asteria_input.output_reference),
           {
-            let redeemer_data: Data = redeemer
+            let redeemer_data: Data = Mine
+            redeemer_data
+          },
+        ),
+        Pair(
+          Spend(ship_input.output_reference),
+          {
+            let redeemer_data: Data = MineAsteria
             redeemer_data
           },
         ),
@@ -220,8 +218,6 @@ fn mine(options: MineTestOptions) -> Bool {
       max_speed,
       max_ship_fuel,
       fuel_per_step,
-      initial_fuel,
-      min_distance,
       Some(ship_input_datum),
       redeemer,
       OutputReference { transaction_id: mock.transaction_id_1, output_index: 0 },
@@ -244,7 +240,7 @@ test more_than_2_script_inputs() fail {
   mine(
     MineTestOptions {
       ..default_mine_options(),
-      excludes_extra_script_input: False,
+      excludes_extra_asteria_input: False,
     },
   )
 }
@@ -252,27 +248,5 @@ test more_than_2_script_inputs() fail {
 test no_pilot_token() fail {
   mine(
     MineTestOptions { ..default_mine_options(), includes_pilot_token: False },
-  )
-}
-
-test wrong_x_pos() fail {
-  mine(MineTestOptions { ..default_mine_options(), ship_pos_x: 1 })
-}
-
-test wrong_y_pos() fail {
-  mine(MineTestOptions { ..default_mine_options(), ship_pos_y: 1 })
-}
-
-test ship_token_not_burnt() fail {
-  mine(MineTestOptions { ..default_mine_options(), burns_ship_token: False })
-}
-
-test fuel_tokens_not_burnt() fail {
-  mine(MineTestOptions { ..default_mine_options(), burns_fuel_tokens: False })
-}
-
-test no_respect_latest_time() fail {
-  mine(
-    MineTestOptions { ..default_mine_options(), respects_latest_time: False },
   )
 }

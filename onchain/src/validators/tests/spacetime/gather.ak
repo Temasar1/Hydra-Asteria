@@ -1,9 +1,11 @@
 use aiken/collection/dict
 use aiken/interval.{Finite, Interval, IntervalBound}
 use asteria/test_mock as mock
-use asteria/types.{AssetClass, GatherFuel, PelletDatum, ShipDatum, Speed}
+use asteria/types.{
+  AssetClass, GatherFuel, PelletDatum, Provide, ShipDatum, Speed,
+}
 use cardano/address.{Address, Script, VerificationKey}
-use cardano/assets.{add, from_asset, from_lovelace, zero}
+use cardano/assets.{add, from_lovelace, zero}
 use cardano/transaction.{
   InlineDatum, Input, NoDatum, Output, OutputReference, Spend, Transaction,
 }
@@ -14,7 +16,8 @@ use spacetime
 // ==============================================================================================
 
 type GatherTestOptions {
-  provided_amount: Int,
+  ship_added_amount: Int,
+  pellet_provided_amount: Int,
   ship_initial_fuel: Int,
   ship_pos_x: Int,
   ship_pos_y: Int,
@@ -24,14 +27,12 @@ type GatherTestOptions {
   preserves_pos_x: Bool,
   includes_pilot_token: Bool,
   includes_ship_output: Bool,
-  respects_latest_time: Bool,
-  excludes_extra_script_input: Bool,
-  mints_no_tokens: Bool,
 }
 
 fn default_gather_options() {
   GatherTestOptions {
-    provided_amount: 10,
+    ship_added_amount: 10,
+    pellet_provided_amount: 10,
     ship_initial_fuel: 40,
     ship_pos_x: 10,
     ship_pos_y: 10,
@@ -41,9 +42,6 @@ fn default_gather_options() {
     preserves_pos_x: True,
     includes_pilot_token: True,
     includes_ship_output: True,
-    respects_latest_time: True,
-    excludes_extra_script_input: True,
-    mints_no_tokens: True,
   }
 }
 
@@ -54,20 +52,14 @@ fn gather(options: GatherTestOptions) -> Bool {
   let pellet_pos_y = 10
   let fuel_per_step = 1
   let max_ship_fuel = 100
-  let initial_pellet_fuel = 40
-  let min_asteria_distance = 10
   let max_speed = Speed { distance: 1, time: 1_000 }
-  let earliest_time =
-    if options.respects_latest_time {
-      10_000
-    } else {
-      0
-    }
+  let earliest_time = 10_000
   let latest_time = earliest_time + 20_000
   let last_move_latest_time = 5_000
   let admin_token =
     AssetClass { policy: mock.admin_policy, name: mock.admin_token_name }
-  let redeemer = GatherFuel(options.provided_amount)
+  let ship_redeemer = GatherFuel(options.ship_added_amount)
+  let pellet_redeemer = Provide(options.pellet_provided_amount)
   let pilot_address =
     Address {
       payment_credential: VerificationKey(mock.pilot_credential),
@@ -84,6 +76,8 @@ fn gather(options: GatherTestOptions) -> Bool {
       pos_y: pellet_pos_y,
       shipyard_policy: mock.shipyard_policy,
     }
+  let pellet_output_reference =
+    OutputReference { transaction_id: mock.transaction_id_2, output_index: 0 }
   let pellet_input = {
     let output =
       Output {
@@ -94,9 +88,7 @@ fn gather(options: GatherTestOptions) -> Bool {
         datum: InlineDatum(pellet_datum),
         reference_script: None,
       }
-    let output_reference =
-      OutputReference { transaction_id: mock.transaction_id_2, output_index: 0 }
-    Input { output_reference, output }
+    Input { output_reference: pellet_output_reference, output }
   }
   let ship_address =
     Address {
@@ -117,7 +109,7 @@ fn gather(options: GatherTestOptions) -> Bool {
       |> add(
           mock.pellet_credential,
           "FUEL",
-          options.ship_initial_fuel + options.provided_amount,
+          options.ship_initial_fuel + options.ship_added_amount,
         )
       |> add("aaaa", "tokenA", options.extra_token_amount)
   let ship_input_datum =
@@ -140,21 +132,8 @@ fn gather(options: GatherTestOptions) -> Bool {
       pilot_token_name: mock.pilot_token_name,
       last_move_latest_time,
     }
-  let extra_script_input = {
-    let output =
-      Output {
-        address: Address {
-          payment_credential: Script("7777"),
-          stake_credential: None,
-        },
-        value: zero,
-        datum: NoDatum,
-        reference_script: None,
-      }
-    let output_reference =
-      OutputReference { transaction_id: mock.transaction_id_1, output_index: 0 }
-    Input { output_reference, output }
-  }
+  let ship_output_reference =
+    OutputReference { transaction_id: mock.transaction_id_1, output_index: 0 }
   let ship_input = {
     let output =
       Output {
@@ -163,9 +142,7 @@ fn gather(options: GatherTestOptions) -> Bool {
         datum: InlineDatum(ship_input_datum),
         reference_script: None,
       }
-    let output_reference =
-      OutputReference { transaction_id: mock.transaction_id_1, output_index: 0 }
-    Input { output_reference, output }
+    Input { output_reference: ship_output_reference, output }
   }
   let pilot_input = {
     let output = {
@@ -194,18 +171,14 @@ fn gather(options: GatherTestOptions) -> Bool {
         ship_output_value
       } else {
         ship_output_value
-          |> add(mock.pellet_credential, "FUEL", -options.provided_amount)
+          |> add(mock.pellet_credential, "FUEL", -options.ship_added_amount)
       },
       datum: InlineDatum(ship_output_datum),
       reference_script: None,
     }
   let tx =
     Transaction {
-      inputs: if options.excludes_extra_script_input {
-        [ship_input, pilot_input, pellet_input]
-      } else {
-        [ship_input, pilot_input, pellet_input, extra_script_input]
-      },
+      inputs: [ship_input, pilot_input, pellet_input],
       reference_inputs: [],
       outputs: if options.includes_ship_output {
         [ship_output]
@@ -213,11 +186,7 @@ fn gather(options: GatherTestOptions) -> Bool {
         []
       },
       fee: 5_000,
-      mint: if options.mints_no_tokens {
-        zero
-      } else {
-        from_asset(mock.fuel_policy, "FUEL", 20)
-      },
+      mint: zero,
       certificates: [],
       withdrawals: [],
       validity_range: Interval {
@@ -233,14 +202,16 @@ fn gather(options: GatherTestOptions) -> Bool {
       extra_signatories: [],
       redeemers: [
         Pair(
-          Spend(
-            OutputReference {
-              transaction_id: mock.transaction_id_1,
-              output_index: 0,
-            },
-          ),
+          Spend(ship_output_reference),
           {
-            let redeemer_data: Data = redeemer
+            let redeemer_data: Data = ship_redeemer
+            redeemer_data
+          },
+        ),
+        Pair(
+          Spend(pellet_output_reference),
+          {
+            let redeemer_data: Data = pellet_redeemer
             redeemer_data
           },
         ),
@@ -267,11 +238,9 @@ fn gather(options: GatherTestOptions) -> Bool {
       max_speed,
       max_ship_fuel,
       fuel_per_step,
-      initial_pellet_fuel,
-      min_asteria_distance,
       Some(ship_input_datum),
-      redeemer,
-      OutputReference { transaction_id: mock.transaction_id_1, output_index: 0 },
+      ship_redeemer,
+      ship_input.output_reference,
       tx,
     )
   result
@@ -281,12 +250,10 @@ test gather_ok() {
   gather(default_gather_options())
 }
 
-test more_than_2_script_inputs() fail {
+// adding external fuel is allowed by spacetime
+test external_fuel_added() {
   gather(
-    GatherTestOptions {
-      ..default_gather_options(),
-      excludes_extra_script_input: False,
-    },
+    GatherTestOptions { ..default_gather_options(), ship_added_amount: 60 },
   )
 }
 
@@ -308,14 +275,6 @@ test no_pilot_token() fail {
   )
 }
 
-test different_pos_x() fail {
-  gather(GatherTestOptions { ..default_gather_options(), ship_pos_x: 9 })
-}
-
-test different_pos_y() fail {
-  gather(GatherTestOptions { ..default_gather_options(), ship_pos_y: 9 })
-}
-
 test add_extra_token() fail {
   gather(
     GatherTestOptions { ..default_gather_options(), extra_token_amount: 1 },
@@ -329,15 +288,8 @@ test fuel_not_added() fail {
 }
 
 test exceed_fuel_capacity() fail {
-  gather(GatherTestOptions { ..default_gather_options(), provided_amount: 61 })
-}
-
-test no_respect_latest_time() fail {
   gather(
-    GatherTestOptions {
-      ..default_gather_options(),
-      respects_latest_time: False,
-    },
+    GatherTestOptions { ..default_gather_options(), ship_added_amount: 61 },
   )
 }
 
@@ -356,8 +308,8 @@ test no_ship_token_output() fail {
   )
 }
 
-test mint_tokens() fail {
+test fuel_removed() fail {
   gather(
-    GatherTestOptions { ..default_gather_options(), mints_no_tokens: False },
+    GatherTestOptions { ..default_gather_options(), ship_added_amount: -10 },
   )
 }
