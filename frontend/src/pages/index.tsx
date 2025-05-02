@@ -17,15 +17,23 @@ export default function Landing() {
           <h2 className="font-dmsans-regular text-2xl text-[#F1E9D9] mb-8 leading-relaxed">
             A <span className="font-dmsans-semibold">Cardano bot challenge</span> to showcase the<br/>capabilities of the <span className="font-dmsans-semibold">eUTxO model</span>.
           </h2>
-          <div className="text-center">
+            <div className="flex justify-center space-x-4">
             <Link href="/how-to-play">
               <button className="font-monocraft-regular text-black bg-[#07F3E6] py-4 px-8 rounded-full text-lg">
-                How to play
+              How to play
               </button>
+            </Link>
+          </div>
+          <div className="text-center ">
+            <Link href="/start">
+                <button className="font-monocraft-regular text-black bg-[#07F3E6] py-4 px-8 rounded-full text-lg mt-4">
+                Start
+                </button>
             </Link>
           </div>
         </div>
       </div>
+      
       <div className="container mx-auto sm p-32">
 
         <img src="/landing-grid.svg" className="floating-grid" />
