@@ -4,24 +4,23 @@ import plutusBlueprint from "../../../../onchain/src/plutus.json" with {type: 'j
 import { PlutusScript } from "@meshsdk/core";
     
 const pelletValidator = plutusBlueprint.validators.find(
-    ({ title }) => title === "pellet.pellet.spend"
-  );
+ ({ title }) => title === "pellet.pellet.spend"
+);
         
 const PELLET_SCRIPT = pelletValidator!.compiledCode;
 
-function  pelletScriptApliedParam(admin_token:any){
-
-  const appliedPelletParam   = applyParamsToScript(
+function  applyParamtoPellet(admin_token:any){
+  const cborScript  = applyParamsToScript(
     PELLET_SCRIPT,
     [admin_token],
-    "JSON",
-    );
+    "JSON"
+  );
 
-  const pelletPlutusScript: PlutusScript = {
-    code: appliedPelletParam,
+  const PlutusScript: PlutusScript = {
+    code: cborScript,
     version: "V3"
     };
-  return {pelletPlutusScript, appliedPelletParam};
+  return {PlutusScript, cborScript};
 };
                       
-export {pelletScriptApliedParam};
+export {applyParamtoPellet};
