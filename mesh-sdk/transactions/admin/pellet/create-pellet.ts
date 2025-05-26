@@ -36,9 +36,11 @@ const pelletScriptRef = fromScriptRef(pelletUtxo[0].output.scriptRef!);
 const pelletPlutusScript = pelletScriptRef as PlutusScript;
 const pelletScriptAddress = resolvePlutusScriptAddress(pelletPlutusScript,0);
 
-
 const spacetimeUtxo = await blockchainProvider.fetchUTxOs(spacetimeDeployScript.txHash);
 const shipyardPolicyId = spacetimeUtxo[0].output.scriptHash;
+
+const addressUtxos = await blockchainProvider.fetchAddressUTxOs(changeAddress,admintoken.policyid+admintoken.name);
+const asteriaInput = addressUtxos[0];
 
 export async function createPellet(
   pelletProperty: { posX: number; posY: number; fuel: string }
@@ -51,22 +53,20 @@ export async function createPellet(
 
   const fueltokenNameHex = stringToHex("FUEL");
 
-  const fuelToken: Asset[] = [
+  const assetstoPelletScriptAddress: Asset[] = [
     {
       unit: fuelPolicyID + fueltokenNameHex,
       quantity: pelletProperty.fuel
     },
-  ];
-  const adminAsset: Asset[] = [
     {
       unit: admintoken.policyid + admintoken.name,
       quantity: "1"
     }
   ];
 
-  const fuelReedemer = conStr0([]);
+const fuelReedemer = conStr0([]);
 
-  const txBuilder = new MeshTxBuilder({
+const txBuilder = new MeshTxBuilder({
     fetcher: blockchainProvider,
     submitter: blockchainProvider,
     verbose: true
@@ -74,16 +74,19 @@ export async function createPellet(
   console.log(pelletScriptAddress);
 
   const unsignedTx = await txBuilder
+    .txIn(
+        asteriaInput.input.txHash,
+        asteriaInput.input.outputIndex,
+        asteriaInput.output.amount,
+        asteriaInput.output.address
+    )
     .mintPlutusScriptV3()
     .mint(pelletProperty.fuel, fuelPolicyID!, fueltokenNameHex)
     .mintTxInReference(pelletDeployScript.txHash, 0)
     .mintRedeemerValue(fuelReedemer, "JSON")
 
-    .txOut(pelletScriptAddress, fuelToken)
+    .txOut(pelletScriptAddress, assetstoPelletScriptAddress)
     .txOutInlineDatumValue(pelletDatum, "JSON")
-    .txOut(pelletScriptAddress, adminAsset)
-    .txOutInlineDatumValue(pelletDatum, "JSON")
-    
     .txInCollateral(
       collateral.input.txHash,
       collateral.input.outputIndex,
