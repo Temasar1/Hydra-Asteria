@@ -1,18 +1,20 @@
 import { 
     Asset,
-    byteString,
+    assetName,
     conStr0,
     deserializeDatum,
     integer,
+    mConStr0,
     MeshTxBuilder,
     PlutusScript, 
     policyId,
+    posixTime,
     serializePlutusScript, 
     stringToHex, 
     UTxO,
 } from "@meshsdk/core";
 import { admintoken } from "../../config.js";
-import { blockchainProvider, myWallet} from "../../utils.js";
+import { blockchainProvider, myWallet, slot} from "../../utils.js";
 import { fromScriptRef} from "@meshsdk/core-cst";
 import { maestroprovider } from "../../utils.js";
 import { readFile } from "fs/promises";
@@ -83,7 +85,7 @@ const asteriaInputShipcounter = asteriaInputDatum[0].int;
 const asteriaInputShipYardPolicyId = asteriaInputDatum[1].bytes;
 
 const asteriaOutputDatum =  conStr0([
-    integer(BigInt(Number(asteriaInputShipcounter) + 1)),  //add number of ships(ship Counter)
+    integer(Number(Number(asteriaInputShipcounter) + 1)),  //add number of ships(ship Counter)
     policyId(asteriaInputShipYardPolicyId)
 ]);
 
@@ -91,16 +93,21 @@ const fuelTokenName = stringToHex("FUEL");
 const shipTokenName = stringToHex("SHIP" + asteriaInputShipcounter.toString()); //ship counter from Datum
 const pilotTokenName = stringToHex("PILOT" + asteriaInputShipcounter.toString()); //ship counter from Datum
 
+
+const ttl = Date.now() + 10 * 60 * 1000;
 const shipDatum = conStr0([
     integer(posX),
     integer(posY),
-    byteString(shipTokenName),
-    byteString(pilotTokenName),
-    integer(tx_latest_posix_time)
+    assetName(shipTokenName),
+    assetName(pilotTokenName),
+    posixTime(ttl)
 ]);
 
 
-console.log(shipDatum);
+console.log(shipDatum,'\n');
+console.log("shipyardpolicyId: ", shipyardPolicyid,'\n');
+
+
 //defining assets
 const assetToSpacetimeAddress: Asset[] = [{
     unit: shipyardPolicyid! + shipTokenName,
@@ -123,22 +130,23 @@ const pilotTokenAsset: Asset [] = [{
     quantity: "1"
 }];
 
-const mintShipRedeemer   = conStr0([]);
-const addNewshipRedeemer = conStr0([]);
-const mintFuelRedeemer   = conStr0([]);
+const mintShipRedeemer   = mConStr0([]);
+const addNewshipRedeemer = mConStr0([]);
+const mintFuelRedeemer   = mConStr0([]);
 
 const txBuilder = new MeshTxBuilder({
-    submitter: maestroprovider,
+    submitter: blockchainProvider,
     fetcher: maestroprovider,
    // evaluator: maestroprovider,
     verbose: true
 });
-console.log(asteriaInputAda);
+console.log(asteriaInputAda,"\n");
 console.log("Asteria input Assets",asteriaInputUtxos[0].output.amount);
 console.log("asteria output datum: ",asteriaOutputDatum);
 console.log(" Ship Datum", shipDatum);
 console.log("latest posix time", tx_latest_posix_time)
 
+console.log(tx_latest_posix_time);
 const unsignedTx =  await txBuilder
 
     .invalidHereafter(tx_latest_posix_time)
@@ -147,23 +155,23 @@ const unsignedTx =  await txBuilder
         asteria.input.txHash,
         asteria.input.outputIndex,
     )
-    .spendingReferenceTxInRedeemerValue(addNewshipRedeemer,"JSON",{mem: 3500000, steps:2500000000 })
-    .spendingTxInReference(asteriaDeployScript.txHash,0)
+    .spendingReferenceTxInRedeemerValue(addNewshipRedeemer,"Mesh",{mem: 3500000, steps:2500000000 })
+    .spendingTxInReference(asteriaDeployScript.txHash,0) //
     .txInInlineDatumPresent()
     .txOut(asteriaScriptAddress,totalRewardsAsset)
     .txOutInlineDatumValue(asteriaOutputDatum,"JSON")
     .mintPlutusScriptV3()
     .mint("1",shipyardPolicyid!,shipTokenName)
     .mintTxInReference(spacetimeDeployScript.txHash,0)
-    .mintRedeemerValue(mintShipRedeemer,"JSON",{mem: 3500000, steps:2500000000 })
+    .mintRedeemerValue(mintShipRedeemer,"Mesh",{mem: 3500000, steps:2500000000 })
     .mintPlutusScriptV3()
     .mint("1",shipyardPolicyid!,pilotTokenName)
     .mintTxInReference(spacetimeDeployScript.txHash,0)
-    .mintRedeemerValue(mintShipRedeemer,"JSON",{mem: 3500000, steps:2500000000 })
+    .mintRedeemerValue(mintShipRedeemer,"Mesh",{mem: 3500000, steps:2500000000 })
     .mintPlutusScriptV3()
     .mint(initial_fuel, fuelPolicyId!, fuelTokenName)
     .mintTxInReference(pelletDeployScript.txHash, 0)
-    .mintRedeemerValue(mintFuelRedeemer, "JSON",{mem: 3500000, steps:2500000000 })
+    .mintRedeemerValue(mintFuelRedeemer,"Mesh",{mem: 3500000, steps:2500000000 })
     
     .txOut(spacetimeAddress,assetToSpacetimeAddress)
     .txOutInlineDatumValue(shipDatum,"JSON")
