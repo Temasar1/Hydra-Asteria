@@ -32,7 +32,7 @@ function applyParamtoAsteria(
         min_asteria_distance,
         initial_fuel
       ],
-      "JSON"
+    "JSON"
   );
 
     const PlutusScript: PlutusScript = {

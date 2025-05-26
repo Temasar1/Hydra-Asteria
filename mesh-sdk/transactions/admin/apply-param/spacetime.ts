@@ -9,33 +9,31 @@ const asteriaValidator = plutusBlueprint.validators.find(
 
 const SPACETIME_SCRIPT = asteriaValidator!.compiledCode;
 
-function spacetimeScriptAppliedParam (
+function applyParamtoSpacetime (
    pelletScriptAddress:ScriptHash,
    asteriaScriptAddress:ScriptHash,
    admin_token:any,
    max_speed:any,
-   fuel_per_step:Integer,
-   initial_fuel:Integer,
-   min_asteria_distance:Integer
+   max_ship_fuel:Integer,
+   fuel_per_step: Integer
 ){
-    const appliedSpacetimeParam = applyParamsToScript(
+    const cborScript = applyParamsToScript(
         SPACETIME_SCRIPT!,
         [   pelletScriptAddress,
             asteriaScriptAddress,
             admin_token,
             max_speed,
-            fuel_per_step,
-            initial_fuel,
-            min_asteria_distance
+            max_ship_fuel,
+            fuel_per_step
         ],
-        "JSON"
-        );
+     "JSON"
+    );
 
-    const spacetimePlutusScript: PlutusScript = {
-        code: appliedSpacetimeParam,
+    const plutusScript: PlutusScript = {
+        code: cborScript,
         version: "V3"
     };
-    return {spacetimePlutusScript,appliedSpacetimeParam};
+    return {plutusScript,cborScript};
 };
 
-export {spacetimeScriptAppliedParam};
+export {applyParamtoSpacetime};

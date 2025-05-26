@@ -9,18 +9,18 @@ const asteriaValidator = plutusBlueprint.validators.find(
 
 const DEPLOY_SCRIPT = asteriaValidator!.compiledCode;
 
-function deployScriptAppliedParam( admin_token:any){
-    const appliedDeployParam   = applyParamsToScript(
+function applyParamtoDeploy( admin_token:any){
+    const cborScript   = applyParamsToScript(
       DEPLOY_SCRIPT,
       [admin_token],
       "JSON"
     );
 
-  const deployPlutusScript : PlutusScript = {
-    code: appliedDeployParam,
+  const plutusScript : PlutusScript = {
+    code: cborScript,
     version: "V3"
   };
-return {deployPlutusScript,appliedDeployParam};
+return {cborScript,plutusScript};
 };
 
-export {deployScriptAppliedParam};
+export {applyParamtoDeploy};
