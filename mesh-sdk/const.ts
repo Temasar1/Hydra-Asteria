@@ -1,8 +1,8 @@
-import { byteString, conStr0, integer, policyId, stringToHex } from "@meshsdk/core";
+import { assetClass, assetName, byteString, conStr0, integer, policyId, stringToHex } from "@meshsdk/core";
 
 let admin_token = conStr0([
-  policyId("42d256198af3a67890ed7aaeea027b18da3c585b77d362b5745413c2"), 
-  byteString(stringToHex("asteria-temasar"))                              
+  policyId("fbeafbfb456a440b174001793c546c93bdf887730c1e12b2f9f0d293"), 
+  assetName(stringToHex("Asteriatoken"))                              
 ]);
 const ship_mint_lovelace_fee = integer(3000000);
 const max_asteria_mining = integer(50);
@@ -10,9 +10,9 @@ const max_speed = conStr0([
   integer(1),      //distance
   integer(30000)   //time
 ]);
-const max_ship_fuel = integer(100);
-const fuel_per_step = integer(1);
-const initial_fuel = integer(30);
+const max_ship_fuel = integer(300);
+const fuel_per_step = integer(20);
+const initial_fuel = integer(100);
 const min_asteria_distance = integer(10);
 
 export {
