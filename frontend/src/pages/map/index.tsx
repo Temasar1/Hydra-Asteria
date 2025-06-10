@@ -1,103 +1,148 @@
-import { useChallengeStore } from '@/stores/challenge';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
-import 'leaflet/dist/leaflet.css';
-import { useEffect, useState } from 'react';
-import L from 'leaflet';
+import React, { useEffect, useRef, useState } from "react";
 
-// Fix Leaflet default icons
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'leaflet/marker-icon-2x.png',
-  iconUrl: 'leaflet/marker-icon.png',
-  shadowUrl: 'leaflet/marker-shadow.png',
-});
+// Example input centered around 0
+let changeShipPos: {x: number, y: number}[];
+const inputPellets = [
+  { x: -40, y: 20 },
+  { x: 0, y: 0 },
+  { x: 40, y: -10 },
+  { x: 25, y: 30 },
+  { x: -15, y: -20 },
+  { x: -35, y: 10 },
+];
+const inputShips = [
+  { x: -5, y: -5 },
+  { x: 10, y: 15 },
+  { x: -10, y: 15 },
+];
+ 
+const GalaxyMap = ({ pellets = inputPellets, ships = inputShips }) => {
+  const gridSize = 100; // Full grid range (-50 to 50)
+  const moveStep = 1;
+  const containerRef = useRef(null);
 
-export default function Map() {
-  const { current } = useChallengeStore();
-  const [mapPoints, setMapPoints] = useState<any[]>([]);
-
+  const [ship, setShip] = useState(ships);
+  const [selectedIndex, setSelectedIndex] = useState(null);
+  
   useEffect(() => {
-    // Fetch map data using the same parameters as before
-    const fetchMapData = async () => {
-      try {
-        const params = new URLSearchParams([
-          ['shipyardPolicyId', current().shipyardPolicyId],
-          ['fuelPolicyId', current().fuelPolicyId],
-          ['shipAddress', current().shipAddress],
-          ['fuelAddress', current().fuelAddress],
-          ['asteriaAddress', current().asteriaAddress],
-        ]);
+    const handleKeyDown = (e) => {
+      if (selectedIndex === null) return;
 
-        const response = await fetch(`${process.env.API_URL}/graphql?${params.toString()}`);
-        const data = await response.json();
-        setMapPoints(data.points || []);
-      } catch (error) {
-        console.error('Error fetching map data:', error);
-      }
+      setShip((prevShips) => {
+        const updated = [...prevShips];
+        const node = { ...updated[selectedIndex] };
+
+        switch (e.key) {
+          case "ArrowUp":
+            node.y = Math.max(-50, node.y - moveStep);
+            break;
+          case "ArrowDown":
+            node.y = Math.min(50, node.y + moveStep);
+            break;
+          case "ArrowLeft":
+            node.x = Math.max(-50, node.x - moveStep);
+            break;
+          case "ArrowRight":
+            node.x = Math.min(50, node.x + moveStep);
+            break;
+          default:
+            return prevShips;
+        }
+
+        updated[selectedIndex] = node;
+        changeShipPos = updated;
+        return updated;
+      });
     };
+  
 
-    fetchMapData();
-  }, [current]);
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [selectedIndex]);
+
+  const handleClick = (index) => {
+    setSelectedIndex(index);
+    //moveShips();
+  };
+
+  const toPercent = (val) => `${((val + 50) / gridSize) * 100}%`;
 
   return (
-    <div className="relative w-full h-[calc(100vh-64px)]">
-      <div className="absolute top-4 right-4 z-10 bg-white p-4 rounded-lg shadow-md">
-        <div className="flex flex-col gap-2">
-          <button className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors">
-            Zoom In
-          </button>
-          <button className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors">
-            Zoom Out
-          </button>
-          <select className="px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
-            <option value="default">Default View</option>
-            <option value="satellite">Satellite View</option>
-            <option value="terrain">Terrain View</option>
-          </select>
-        </div>
-      </div>
-
-      <MapContainer
-        center={[0, 0]}
-        zoom={3}
-        className="w-full h-full"
-      >
-        <TileLayer
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+    <div
+      ref={containerRef}
+      tabIndex={0}
+      className="relative w-full h-screen flex items-center justify-center overflow-hidden outline-none"
+      style={{
+        backgroundImage: "url('/starfield.svg')",
+        backgroundSize: "conver",
+        backgroundPosition: "center",
+      }}
+    >
+      {pellets.map((node, idx) => (
+        <img
+          key={idx}
+          src="/landing-fuel-1.svg"
+          alt="pellet"
+          className="absolute w-6 h-6"
+          style={{
+            left: toPercent(node.x),
+            top: toPercent(node.y),
+            transform: "translate(-50%, -50%)",
+          }}
         />
-        
-        {mapPoints.map((point, index) => (
-          <Marker
-            key={index}
-            position={[point.latitude, point.longitude]}
-          >
-            <Popup>
-              <div className="p-2">
-                <h3 className="font-bold text-lg mb-2">{point.name}</h3>
-                <div className="space-y-1">
-                  <p className="text-sm">Ship ID: {point.shipyardPolicyId}</p>
-                  <p className="text-sm">Fuel ID: {point.fuelPolicyId}</p>
-                </div>
-              </div>
-            </Popup>
-          </Marker>
-        ))}
-      </MapContainer>
+      ))}
 
-      <div className="absolute bottom-4 right-4 z-10 bg-white p-4 rounded-lg shadow-md">
-        <h3 className="font-bold mb-2">Legend</h3>
-        <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-red-500 rounded-full"></div>
-            <span className="text-sm">Ship Location</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-blue-500 rounded-full"></div>
-            <span className="text-sm">Fuel Station</span>
-          </div>
+      <img
+        src="/favicon.png"
+        alt="asteria"
+        className="absolute w-16 h-16"
+        style={{
+          left: "50%",
+          top: "50%",
+          transform: "translate(-50%, -50%)",
+          zIndex: 10,
+        }}
+      />
+
+      {ship.map((s, index) => (
+        <img
+          key={index}
+          src="/landing-ship-1.svg"
+          alt="ship"
+          className={`absolute w-6 h-6 cursor-pointer ${
+            index === selectedIndex ? "ring-2 ring-yellow-400" : ""
+          }`}
+          style={{
+            left: toPercent(s.x),
+            top: toPercent(s.y),
+            transform: "translate(-50%, -50%)",
+            zIndex: index === selectedIndex ? 10 : 1,
+          }}
+          onClick={(e) => {
+            e.stopPropagation();
+            handleClick(index);
+          }}
+        />
+      ))}
+      {/* Center Grid at (0,0) */}
+        <div
+          className="absolute border-2 border-black-400 bg-transparent pointer-events-none"
+          style={{
+            width: "1%",
+            height: "1%",
+            left: "50%",
+            top: "50%",
+            transform: "translate(-50%, -50%)",
+            zIndex: 3,
+          }}
+        >
+          <span className="absolute text-green-400 text-xs" style={{ top: "100%", left: "50%", transform: "translateX(-50%)" }}>
+            (0, 0)
+          </span>
         </div>
-      </div>
     </div>
   );
-}
+};
+
+export default GalaxyMap;
