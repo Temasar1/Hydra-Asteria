@@ -1,7 +1,12 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { 
+  useEffect, 
+  useRef, 
+  useState 
+} from "react";
+import { newSocketConnection } from "../../../apis/connection";
 
-// Example input centered around 0
-let changeShipPos: {x: number, y: number}[];
+const url = 'http://localhost:4000';
+let latestShipCoordinates: any = [];
 const inputPellets = [
   { x: -40, y: 20 },
   { x: 0, y: 0 },
@@ -23,6 +28,9 @@ const GalaxyMap = ({ pellets = inputPellets, ships = inputShips }) => {
 
   const [ship, setShip] = useState(ships);
   const [selectedIndex, setSelectedIndex] = useState(null);
+  const [connection, setConnection] = useState(false);
+  const [button, setButton] = useState('connect to begin');
+  const [shipMove, setShipMove] = useState(false);
   
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -50,24 +58,43 @@ const GalaxyMap = ({ pellets = inputPellets, ships = inputShips }) => {
         }
 
         updated[selectedIndex] = node;
-        changeShipPos = updated;
+        latestShipCoordinates = updated
         return updated;
       });
     };
-  
-
-
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [selectedIndex]);
 
-  const handleClick = (index) => {
+//   useEffect(() => {
+//     socket.on('shipHash', (data: string) => {
+//   if(shipMove){
+//     if(!data){
+//       alert("Create Ship with mesh-sdk");
+//     };
+//   };   
+//     console.log(data)
+//   })
+// },[])
+  useEffect(() => {
+    if (connection){
+    const socket = newSocketConnection(url);
+    socket.on('connect', () => {
+      setButton(socket.connected ? 'connected' : button);
+    });
+    socket.emit('initial-coordinates', { 
+      pellets: inputPellets,
+      ships: inputShips,
+     });
+    socket.emit('ship-coordinates', {latestShipCoordinates});
+    }
+  },[connection,latestShipCoordinates]);
+
+  const handleShipClick = (index) => {
     setSelectedIndex(index);
-    //moveShips();
   };
 
   const toPercent = (val) => `${((val + 50) / gridSize) * 100}%`;
-
   return (
     <div
       ref={containerRef}
@@ -121,11 +148,10 @@ const GalaxyMap = ({ pellets = inputPellets, ships = inputShips }) => {
           }}
           onClick={(e) => {
             e.stopPropagation();
-            handleClick(index);
+            handleShipClick(index);
           }}
         />
       ))}
-      {/* Center Grid at (0,0) */}
         <div
           className="absolute border-2 border-black-400 bg-transparent pointer-events-none"
           style={{
@@ -140,6 +166,17 @@ const GalaxyMap = ({ pellets = inputPellets, ships = inputShips }) => {
           <span className="absolute text-green-400 text-xs" style={{ top: "100%", left: "50%", transform: "translateX(-50%)" }}>
             (0, 0)
           </span>
+        </div>
+        <div className="flex flex-row justify-end flex-auto basis-1/4">
+        <button
+            onClick={() => {
+              setConnection(true);
+            }}
+
+            className="font-monocraft-regular absolute top-0 right-2 border border-solid border-[#5B5B5B] bg-black py-3 px-4 rounded-full flex flex-row items-center"
+          >
+              {button}
+          </button>
         </div>
     </div>
   );

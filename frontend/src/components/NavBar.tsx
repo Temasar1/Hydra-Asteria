@@ -49,23 +49,7 @@ const NavBar: React.FunctionComponent = () => {
           </Link>
         </div>
         <div className="flex flex-row justify-end flex-auto basis-1/4">
-          <button
-            className="border border-solid border-[#5B5B5B] bg-black py-3 px-4 rounded-full mx-2 flex flex-row items-center"
-          >
-            <img src="/challenge-icon.svg" className="w-6 h-6 mr-3 pointer-events-none" />
-            <select
-              value={selected}
-              onChange={handleSelect}
-              className="font-inter-regular text-[#F1E9D9] bg-transparent focus:outline-none appearance-none text-md text-left min-w-36"
-            >
-              { challenges.map((challenge, index) =>
-                <option key={index} value={index}>
-                  { challenge.label }
-                </option>
-              )}
-            </select>
-            <img src="/chevron.svg" className="w-5 h-5 ml-3 pointer-events-none" />
-          </button>
+  
         </div>
       </div>
     </div>
