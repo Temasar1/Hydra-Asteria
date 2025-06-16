@@ -1,6 +1,7 @@
 import express from "express"
 import { Server} from "socket.io"
 import http from "http";
+import { create_ships, create_pellets, ship_actions } from "./server/sockets.js";
 
 const app = express();
 const server = http.createServer(app);
@@ -11,35 +12,14 @@ const io = new Server(server, {
     }
 });
 io.on('connection', (socket) => {
-    console.log('new connection', socket.id);
-
-    // socket.on('initial-coordinates', (data) => {
-    //     const { pellets , ships } = data;
-    //     for( let i = 0; i <= ships.length; i++){
-    //         //console.log(`ship${i} = ${ships.x}`)
-    //     }
-    //    // console.log(pellets);
-    //    // console.log(ships);
-    // });
-    socket.on('ship-coordinates', (data) => {
-        const shipCoordinates = data.latestShipCoordinates;
-        if(!Array.isArray(shipCoordinates)){
-            throw new Error("Expected data is an array");
-            return;
-        }
-        shipCoordinates.forEach((coord: any, index: any) => {
-            console.log(`Received coordinates for ship ${index}: `, coord);
-        });
-    })
-
-    socket.emit('shipHash', {
-        
-    })
-    socket.on('disconnect', () => {
-        console.log('client disconnected', socket.id);
-    });
+console.log('new connection', socket.id); 
+   create_ships(socket);
+   create_pellets(socket);
+   ship_actions(socket);
+socket.on('disconnect', () => {
+    console.log('client disconnected', socket.id);
+  });
 });
-
 
 const PORT = 4000;
 server.listen(PORT, () => {
