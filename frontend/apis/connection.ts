@@ -1,10 +1,28 @@
-import { io } from "socket.io-client"
+import { io, Socket } from "socket.io-client";
 
-let socket: any;
-export const newSocketConnection = ( url: string) => {
-socket = io(url);
-socket.on('connect', () => {
-    console.log("connected to socket.io server");
- });
- return socket;
+let socket: Socket | null = null;
+
+const getSocket = (): Socket => {
+  if (!socket) {
+    socket = io("http://localhost:3001", {
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 3000,
+    });
+
+    socket.on("connect", () => {
+      console.log("Connected to WebSocket server");
+    });
+
+    socket.on("disconnect", () => {
+      console.log("Disconnected from WebSocket server");
+    });
+
+    socket.on("connect_error", (error) => {
+      console.error("Connection error:", error);
+    });
+  }
+  return socket;
 };
+
+export default getSocket;
