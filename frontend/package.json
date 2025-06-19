@@ -12,6 +12,8 @@
     "@apollo/client": "^3.11.8",
     "@mdx-js/loader": "^3.0.1",
     "@mdx-js/react": "^3.0.1",
+    "@meshsdk/core": "^1.9.0-beta.55",
+    "@meshsdk/react": "^1.9.0-beta.55",
     "@next/mdx": "^14.2.15",
     "@types/mdx": "^2.0.13",
     "axios": "^1.9.0",
