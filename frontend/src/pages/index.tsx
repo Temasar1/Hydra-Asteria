@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { useChallengeStore } from '@/stores/challenge';
+import { CardanoWallet} from "@meshsdk/react";
+
 
 export default function Landing() {
   const { challenges, selected, select } = useChallengeStore();
-
   return (
     <div className="w-full bg-starfield bg-cover bg-center relative">
       <div className="min-h-[calc(100vh-64px)] relative">
@@ -21,6 +22,13 @@ export default function Landing() {
             <Link href="/how-to-play">
               <button className="font-monocraft-regular text-black bg-[#07F3E6] py-4 px-8 rounded-full text-lg">
                 How to play
+              </button>
+            </Link>
+          </div>
+          <div className="text-center mt-8">
+            <Link href="/game-setup">
+              <button className="font-monocraft-regular text-black bg-[#07F3E6] py-4 px-8 rounded-full text-lg">
+                Game-setup
               </button>
             </Link>
           </div>
@@ -115,3 +123,5 @@ export default function Landing() {
     </div>
   );
 }
+
+Landing.showNavBar = true;
