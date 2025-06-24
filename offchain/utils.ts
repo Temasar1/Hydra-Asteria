@@ -1,4 +1,8 @@
 import { MeshWallet, BlockfrostProvider, MaestroProvider} from "@meshsdk/core";
+import fs from 'fs';
+import { readFile, writeFile } from "fs/promises";
+import path, { dirname, join } from 'path';
+import { fileURLToPath } from "url";
 
 // const blockfrostApiKey = process.env.BLOCKFROST_APIKEY;
 // //const seedPhrase  = process.env.SEED_PHRASE?.split(',')!
@@ -34,3 +38,22 @@ const slot = blockData.slot;
 export const tx_latest_slot = Number(slot) + 600;
 export const tx_earliest_slot = Number(slot) - 60;
 export const tx_earliest_posix_time = time - 60 * 1000;     //- 1 minute from now
+
+const __dirname = (process.cwd())
+const __filedir = join(__dirname, '/offchain/transactions/admin/deploy/ref-script/');
+
+export const writeScriptRefJson = async (filename: string, txHash: string) => {
+  await writeFile(
+    __filedir + filename + ".json",
+    JSON.stringify({ txHash: txHash })
+    );
+};
+
+export const readScripRefJson = async (filename: string) => {
+const scriptRef = JSON.parse(
+  await readFile(__filedir + filename + ".json", "utf-8"));
+  if(!scriptRef){
+    throw new Error(`${filename} scriptref not found`);
+  }
+  return scriptRef;
+}
