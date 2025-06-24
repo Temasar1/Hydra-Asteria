@@ -7,7 +7,7 @@ import {
   stringToHex,
   UTxO
 } from "@meshsdk/core";
-import { blockchainProvider, myWallet } from "../../../utils.js";
+import { blockchainProvider, myWallet, readScripRefJson } from "../../../utils.js";
 import { admintoken } from "../../../config.js";
 import { fromScriptRef, resolvePlutusScriptAddress } from "@meshsdk/core-cst";
 import { readFile } from "fs/promises";
@@ -17,13 +17,11 @@ const changeAddress = await myWallet.getChangeAddress();
 const collateral: UTxO = (await myWallet.getCollateral())[0]!;
 const utxos = await myWallet.getUtxos();
 
-const spacetimeDeployScript = JSON.parse(
-    await readFile("./scriptref-hash/spacetime-script.json", "utf-8"));
+const spacetimeDeployScript = await readScripRefJson('spacetimeref');
 if(!spacetimeDeployScript.txHash){
     throw Error ("spacetime script-ref not found, deploy spacetime first.");
 }; 
-const pelletDeployScript = JSON.parse(
-  await readFile("./scriptref-hash/pellet-script.json", "utf-8"));
+const pelletDeployScript = await readScripRefJson('pelletref');
 if(!pelletDeployScript.txHash){
   throw Error ("pellet script-ref not found, deploy pellet first.");
 };
@@ -54,7 +52,6 @@ const txBuilder = new MeshTxBuilder({
     evaluator: blockchainProvider,
     verbose: true
   });
-  //console.log(asteriaInput.output.amount);
   txBuilder
   .mintPlutusScriptV3()
   .mint(totalFuelMint, fuelPolicyID!, fueltokenNameHex)
