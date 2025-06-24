@@ -1,17 +1,19 @@
 import { createPellet } from "../../../admin/pellet/create-pellet.js";
+import { writeFileSync } from "fs";
+import { readFile, writeFile } from "fs/promises";
+import { join, dirname} from "path";
+import { fileURLToPath } from "url";
+import { readPelletsCsvFile, writePelletsCsvFIle } from "./utils.js";
 
 
 async function createPelletTest(){
     let pellets: { posX: number; posY: number; fuel: string }[] = [];
     let totalFuel = 0;
-
-    const numberOfPellets = 20;
-    
-    //generates random pellet property
-    function generateRandomFuelProperty() {
-        const posX = Math.floor(Math.random() * 100);
-        const posY = Math.floor(Math.random() * 100);
-        const fuel = (Math.floor(Math.random() * (200 - 50 + 1)) + 50).toString(); //random fuel from 50 to 200
+    const numberOfPellets = 30;
+        function generateRandomFuelProperty() {
+            const posX = Math.floor(Math.random() * 101) - 50;
+            const posY = Math.floor(Math.random() * 101) - 50;
+            const fuel = (Math.floor(Math.random() * (200 - 50 + 1)) + 50).toString();
         return {fuel, posX, posY};
     };
     for(let i = 0; i < numberOfPellets; i++){
@@ -24,12 +26,13 @@ async function createPelletTest(){
         pellets.push(pelletProperty);
         totalFuel += parseInt(fuel, 10); // Accumulate the fuel value
     }
-    const pelletTxHash = await createPellet(pellets, totalFuel.toString());
-    
-    console.log(pellets);
-    console.log("Total fuel value:", totalFuel); // Log the total fuel value
-    console.log("Pellet transaction hashes:", pelletTxHash);
-    return pelletTxHash;
+
+writePelletsCsvFIle(pellets);
+const txHash = await createPellet(
+    pellets,
+    totalFuel.toString()
+  );
+return txHash;
 }
 
 export {createPelletTest};
