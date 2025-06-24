@@ -11,33 +11,32 @@ import {
     stringToHex, 
     UTxO
 } from "@meshsdk/core";
+import { 
+    blockchainProvider, 
+    myWallet, 
+    readScripRefJson, 
+    tx_earliest_slot 
+} from "../../utils.js";
 import { fromScriptRef, resolvePlutusScriptAddress } from "@meshsdk/core-cst";
-import { admintoken} from "../../config.js";
-import { blockchainProvider, myWallet } from "../../utils.js";
-import { readFile } from "fs/promises";
+import { admintoken, max_asteria_mining} from "../../config.js";
 
 const changeAddress = await myWallet.getChangeAddress();
 const collateral: UTxO = (await myWallet.getCollateral())[0]!;
 const utxos = await myWallet.getUtxos();
 
 async function mineAsteria(
-    max_asteria_mining: number,
     ship_tx_hash: string,
-    tx_earliest_posix_time: number
 ){
 
-const spacetimeDeployScript = JSON.parse(
-    await readFile("./scriptref-hash/spacetime-script.json", "utf-8"));
+const spacetimeDeployScript = await readScripRefJson('spacetimeref');
 if(!spacetimeDeployScript.txHash){
     throw Error ("spacetime script-ref not found, deploy spacetime first.");
 }; 
-const pelletDeployScript = JSON.parse(
-    await readFile("./scriptref-hash/pellet-script.json", "utf-8"));
+const pelletDeployScript = await readScripRefJson('pelletref');
 if(!pelletDeployScript.txHash){
     throw Error ("pellet script-ref not found, deploy pellet first.");
 };
-const asteriaDeployScript = JSON.parse(
-    await readFile("./scriptref-hash/asteria-script.json", "utf-8"));
+const asteriaDeployScript = await readScripRefJson('asteriaref');
 if(!asteriaDeployScript.txHash){
     throw Error ("asteria script-ref not found, deploy asteria first.");
 };
@@ -169,7 +168,7 @@ const unsignedTx = await txBuilder
     collateral.input.txHash,
     collateral.input.outputIndex
 )
-.invalidBefore(tx_earliest_posix_time)
+.invalidBefore(tx_earliest_slot)
 .selectUtxosFrom(utxos)
 .changeAddress(changeAddress)
 .setNetwork("preprod")

@@ -15,13 +15,13 @@ import {
 import { 
     blockchainProvider, 
     myWallet, 
+    readScripRefJson, 
     tx_latest_slot
 } from "../../utils.js";
 import { ship_mint_lovelace_fee, initial_fuel } from "../../config.js";
 import { admintoken } from "../../config.js";
 import { fromScriptRef} from "@meshsdk/core-cst";
 import { maestroprovider } from "../../utils.js";
-import { readFile } from "fs/promises";
 
 const changeAddress = await myWallet.getChangeAddress();
 const collateral: UTxO = (await myWallet.getCollateral())[0]!;
@@ -33,18 +33,15 @@ async function createShip(
     posY: number,
 ){
 
-const asteriaDeployScript = JSON.parse(
-    await readFile("./scriptref-hash/asteria-script.json", "utf-8"));
+const asteriaDeployScript = await readScripRefJson('asteriaref');
 if(!asteriaDeployScript.txHash){
     throw new Error ("asteria script-ref not found, deploy asteria first.");
 };
-const spacetimeDeployScript = JSON.parse(
-    await readFile("./scriptref-hash/spacetime-script.json", "utf-8"));
+const spacetimeDeployScript = await readScripRefJson('spacetimeref');
 if(!spacetimeDeployScript.txHash){
     throw new Error ("spacetime script-ref not found, deploy spacetime first.");
 }; 
-const pelletDeployScript = JSON.parse(
-    await readFile("./scriptref-hash/pellet-script.json", "utf-8"));
+const pelletDeployScript = await readScripRefJson('pelletref');
 if(!pelletDeployScript.txHash){
     throw new Error ("pellet script-ref not found, deploy pellet first.");
 };
@@ -53,7 +50,7 @@ const asteriaScriptRefUtxos = await blockchainProvider.fetchUTxOs(asteriaDeployS
 const asteriaScriptRef = fromScriptRef(asteriaScriptRefUtxos[0].output.scriptRef!);
 const asteriaPlutusScript = asteriaScriptRef as PlutusScript;
 const asteriaScriptAddress  = serializePlutusScript(asteriaPlutusScript).address;
-
+console.log(asteriaScriptAddress)
 const spacetimeScriptRefUtxos = await blockchainProvider.fetchUTxOs(spacetimeDeployScript.txHash);
 const shipyardPolicyid =   spacetimeScriptRefUtxos[0].output.scriptHash;
 const spacetimeScriptRef = fromScriptRef(spacetimeScriptRefUtxos[0].output.scriptRef!);
@@ -66,6 +63,9 @@ const fuelPolicyId  = pelletScriptRefUtxos[0].output.scriptHash;
 const asteriaInputUtxos = await blockchainProvider.fetchAddressUTxOs(asteriaScriptAddress,admintoken.policyid+admintoken.name);
 
 const asteria = asteriaInputUtxos[0];
+if(!asteria){
+    throw new Error ("create asteria first");
+}
 const asteriaInputAda = asteria.output.amount.find((Asset) => 
     Asset.unit === "lovelace"
 );
@@ -160,7 +160,7 @@ const unsignedTx =  await txBuilder
     .txInCollateral(
         collateral.input.txHash,
         collateral.input.outputIndex
-     )
+    )
     .selectUtxosFrom(utxos)
     .changeAddress(changeAddress)
     .setNetwork("preprod")

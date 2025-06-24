@@ -15,11 +15,11 @@ import {
 import { 
     blockchainProvider, 
     maestroprovider, 
-    myWallet 
+    myWallet, 
+    readScripRefJson
 } from "../../utils.js";
 import { fromScriptRef} from "@meshsdk/core-cst";
 import { admintoken} from "../../config.js";
-import { readFile } from "fs/promises";
 import { tx_earliest_slot } from "../../utils.js";
 
 const changeAddress = await myWallet.getChangeAddress();
@@ -32,14 +32,11 @@ async function gatherFuel(
     pellet_tx_Hash: string,
     pellet_tx_index: number,
 ){
-
-const spacetimeDeployScript = JSON.parse(
-    await readFile("./scriptref-hash/spacetime-script.json", "utf-8"));
+const spacetimeDeployScript = await readScripRefJson('spacetimeref');
 if(!spacetimeDeployScript.txHash){
     throw Error ("spacetime script-ref not found, deploy spacetime first.");
 }; 
-const pelletDeployScript = JSON.parse(
-    await readFile("./scriptref-hash/pellet-script.json", "utf-8"));
+const pelletDeployScript = await readScripRefJson('pelletref');
 if(!pelletDeployScript.txHash){
 throw Error ("pellet script-ref not found, deploy pellet first.");
 };
