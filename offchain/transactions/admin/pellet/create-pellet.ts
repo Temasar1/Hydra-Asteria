@@ -10,8 +10,6 @@ import {
 import { blockchainProvider, myWallet, readScripRefJson } from "../../../utils.js";
 import { admintoken } from "../../../config.js";
 import { fromScriptRef, resolvePlutusScriptAddress } from "@meshsdk/core-cst";
-import { readFile } from "fs/promises";
-
 
 const changeAddress = await myWallet.getChangeAddress();
 const collateral: UTxO = (await myWallet.getCollateral())[0]!;
@@ -35,9 +33,6 @@ const pelletScriptAddress = resolvePlutusScriptAddress(pelletPlutusScript,0);
 
 const spacetimeUtxo = await blockchainProvider.fetchUTxOs(spacetimeDeployScript.txHash);
 const shipyardPolicyId = spacetimeUtxo[0].output.scriptHash;
-
-// const addressUtxos = await blockchainProvider.fetchAddressUTxOs(changeAddress,admintoken.policyid+admintoken.name);
-// const asteriaInput = addressUtxos[0];
 
 export async function createPellet(
   pelletProperty: { posX: number; posY: number; fuel: string }[], totalFuelMint: string,
@@ -65,28 +60,26 @@ const txBuilder = new MeshTxBuilder({
       scriptHash(shipyardPolicyId!)
     ]);
     
-      txBuilder.txOut(pelletScriptAddress, [ 
-        {
-          unit: fuelPolicyID + fueltokenNameHex,
-          quantity: pellet.fuel
-        },
-        {
-          unit: admintoken.policyid + admintoken.name,
-          quantity: "1"
-        }]
-      )
-      .txOutInlineDatumValue(pelletDatum, "JSON")
+  txBuilder.txOut(pelletScriptAddress, [ 
+    {
+      unit: fuelPolicyID + fueltokenNameHex,
+      quantity: pellet.fuel
+    },
+    {
+      unit: admintoken.policyid + admintoken.name,
+      quantity: "1"
+    }]
+  )
+  .txOutInlineDatumValue(pelletDatum, "JSON")
   }
-   txBuilder .txInCollateral(
-      collateral.input.txHash,
-      collateral.input.outputIndex,
-      collateral.output.amount,
-      collateral.output.address
-    )
-    .changeAddress(changeAddress)
-    .selectUtxosFrom(utxos)
-    .setNetwork("preprod")
-    
+  txBuilder .txInCollateral(
+    collateral.input.txHash,
+    collateral.input.outputIndex
+  )
+  .changeAddress(changeAddress)
+  .selectUtxosFrom(utxos)
+  .setNetwork("preprod")
+  
   const unsignedTx = await txBuilder.complete();
   const signedTx = await myWallet.signTx(unsignedTx);
   const pelletTxhash = await myWallet.submitTx(signedTx);
