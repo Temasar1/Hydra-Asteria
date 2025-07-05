@@ -1,13 +1,14 @@
 {
-  "name": "backend",
+  "name": "offchain",
   "version": "1.0.0",
   "description": "a websocket server for asteria",
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "tsc && node dist/offchain/index.js"
-  },
+  "dev": "tsup --watch",
+  "build": "tsup",
+  "start": "node dist/index.js"
+   },
   "author": "temasar",
   "license": "ISC",
   "dependencies": {
@@ -20,6 +21,7 @@
     "@types/node": "^22.15.32",
     "assemblyscript": "^0.27.34",
     "ts-node": "^10.9.2",
+    "tsup": "^8.5.0",
     "typescript": "^5.8.3"
   }
 }
