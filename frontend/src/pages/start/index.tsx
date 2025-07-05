@@ -24,17 +24,14 @@ const GameStart: React.FC = () => {
   const socket = getSocket();
 
   useEffect(() => {
-    // Load initial state from localStorage
     const initialState = localStorage.getItem("initialGameState");
     if (initialState) {
       const { ships: initialShips, pellets: initialPellets } = JSON.parse(initialState);
       console.log("Loaded initial state from localStorage:", { initialShips, initialPellets });
       setShips(initialShips);
       setPellets(initialPellets);
-      localStorage.removeItem("initialGameState"); // Clean up
     }
 
-    // Focus container for keyboard control
     containerRef.current?.focus();
 
     socket.on("createship-coordinates", (data: { coordinatesArray: Ship[] }) => {
@@ -54,12 +51,25 @@ const GameStart: React.FC = () => {
 
     socket.on("pellet-collected", (data: { pelletId: number }) => {
       console.log("Received pellet-collected:", data);
-      setPellets((prev) => prev.filter((p) => p.id !== data.pelletId));
+      setPellets((prev) => prev.filter((p) => pिनी.id !== data.pelletId));
     });
 
     socket.on("asteria-mined", (data: { username: string }) => {
       console.log("Received asteria-mined:", data);
       alert(`${data.username} has mined Asteria! Game Over!`);
+    });
+
+    socket.on("game-cleared", (data: { username: string; message: string }) => {
+      console.log("Game cleared:", data.message);
+      setShips([]);
+      setPellets([]);
+      setSelectedIndex(null);
+      alert(data.message);
+    });
+
+    socket.on("error", (data: { message: string }) => {
+      console.error("Server error:", data.message);
+      alert(`Error: ${data.message}`);
     });
 
     return () => {
@@ -68,48 +78,63 @@ const GameStart: React.FC = () => {
       socket.off("ship-moved");
       socket.off("pellet-collected");
       socket.off("asteria-mined");
+      socket.off("game-cleared");
+      socket.off("error");
     };
   }, [socket]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (selectedIndex === null) return;
+      if (selectedIndex === null || selectedIndex < 0 || selectedIndex >= ships.length) {
+        console.warn("No ship selected or invalid index:", selectedIndex);
+        return;
+      }
 
-      setShips((prevShips) => {
-        const updated = [...prevShips];
-        const node = { ...updated[selectedIndex] };
+      const ship = ships[selectedIndex];
+      if (!ship) {
+        console.error("Ship not found at index:", selectedIndex);
+        return;
+      }
 
-        switch (e.key) {
-          case "ArrowUp":
-            node.y = Math.max(-50, node.y - moveStep);
-            break;
-          case "ArrowDown":
-            node.y = Math.min(50, node.y + moveStep);
-            break;
-          case "ArrowLeft":
-            node.x = Math.max(-50, node.x - moveStep);
-            break;
-          case "ArrowRight":
-            node.x = Math.min(50, node.x + moveStep);
-            break;
-          default:
-            return prevShips;
-        }
+      let dx = 0;
+      let dy = 0;
 
-        updated[selectedIndex] = node;
-        console.log("Emitting ship-moved:", node);
-        socket.emit("ship-moved", { ship: node });
-        return updated;
-      });
+      switch (e.key) {
+        case "ArrowUp":
+          dy = -moveStep;
+          break;
+        case "ArrowDown":
+          dy = moveStep;
+          break;
+        case "ArrowLeft":
+          dx = -moveStep;
+          break;
+        case "ArrowRight":
+          dx = moveStep;
+          break;
+        default:
+          return;
+      }
+
+      console.log("Emitting ship-moved:", { id: ship.id, dx, dy });
+      socket.emit("ship-moved", { id: ship.id, dx, dy });
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [selectedIndex, socket]);
+  }, [selectedIndex, ships, socket]);
 
   const handleShipClick = (index: number) => {
     setSelectedIndex(index);
     containerRef.current?.focus();
+    console.log("Selected ship at index:", index, ships[index]);
+  };
+
+  const handleQuit = () => {
+    const username = "currentUser"; // Replace with actual username
+    socket.emit("quit", { username });
+    localStorage.removeItem("initialGameState");
+    console.log("Game state cleared from localStorage");
   };
 
   const toPercent = (val: number) => `${((val + 50) / gridSize) * 100}%`;
@@ -135,14 +160,8 @@ const GameStart: React.FC = () => {
             transform: "translate(-50%, -50%)",
           }}
         >
-          <img
-            src="/fuel.svg"
-            alt="pellet"
-            className="w-6 h-6"
-          />
-          <div
-            className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 hidden group-hover:block bg-black bg-opacity-70 text-white text-xs rounded-md border border-gray-300 px-2 py-1 whitespace-nowrap z-50"
-          >
+          <img src="/fuel.svg" alt="pellet" className="w-6 h-6" />
+          <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 hidden group-hover:block bg-black bg-opacity-70 text-white text-xs rounded-md border border-gray-300 px-2 py-1 whitespace-nowrap z-50">
             ID: {node.id}, Fuel: {node.fuel}
             <br />
             ({node.x}, {node.y})
@@ -197,6 +216,15 @@ const GameStart: React.FC = () => {
         >
           (0, 0)
         </span>
+      </div>
+      <div className="absolute bottom-4 right-4 bg-black bg-opacity-70 text-white py-2 px-4 rounded-md text-lg">
+        <button
+          type="button"
+          className="text-white font-monocraft-regular bg-black bg-opacity-70 py-2 px-4 rounded-full disabled:opacity-10"
+          onClick={handleQuit}
+        >
+          quit
+        </button>
       </div>
     </div>
   );
