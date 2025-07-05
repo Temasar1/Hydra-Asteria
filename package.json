@@ -1,0 +1,21 @@
+{
+  "name": "hydra-asteria",
+  "private": true,
+  "workspaces": [
+    "backend",
+    "offchain"
+  ],
+  "type": "module",
+  "scripts": {
+    "build": "tsc && npm run copy-assets",
+    "copy-assets": "copyfiles \"backend/**/*.{json,csv}\" \"offchain/**/*.{json,csv}\" dist", 
+    "dev": "tsup --watch",
+    "start": "node dist/offchain/index.js"
+  },
+  "devDependencies": {
+    "copyfiles": "^2.4.1",
+    "tsup": "^7.2.0",
+    "turbo": "^1.12.0",
+    "typescript": "^5.8.3"
+  }
+}
