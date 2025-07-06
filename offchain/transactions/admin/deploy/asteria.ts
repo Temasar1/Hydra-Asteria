@@ -11,17 +11,15 @@ import {
     MeshTxBuilder,
     scriptHash 
 } from "@meshsdk/core";
-import { blockchainProvider, myWallet } from "../../../utils.js";
+import { blockchainProvider, myWallet, readScripRefJson, writeScriptRefJson } from "../../../utils.js";
 import { applyParamtoAsteria } from "../apply-param/Asteria.js";
 import { applyParamtoDeploy } from "../apply-param/deploy.js";
 import { resolvePlutusScriptAddress} from "@meshsdk/core-csl";
-import { readFile, writeFile } from "fs/promises";
 
 const utxos = await myWallet.getUtxos();
 const changeAddress = await myWallet.getChangeAddress();
 
-const pelletDeployScript = JSON.parse(
-    await readFile("./scriptref-hash/pellet-script.json", "utf-8"));
+const pelletDeployScript =  await readScripRefJson("pelletref");
 if(!pelletDeployScript.txHash){
     throw Error ("pellet script-ref not found, deploy pellet first.");
 };
@@ -49,7 +47,6 @@ const asteriaAsset: Asset[] = [
     }
 ];
 
-
 async function deployAsteria(){
 
     const txBuiler = new MeshTxBuilder({
@@ -69,11 +66,8 @@ async function deployAsteria(){
     
     const signedTx = await myWallet.signTx(unsignedTx);
     const txHash = await myWallet.submitTx(signedTx);
-    
-await writeFile(
-    "./scriptref-hash/asteria-script.json",
-    JSON.stringify({ txHash: txHash })
-  );
+    await writeScriptRefJson("asteriaref", txHash);
+    return txHash;
 };
 
 export {deployAsteria};

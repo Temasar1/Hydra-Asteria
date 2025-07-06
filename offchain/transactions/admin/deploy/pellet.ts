@@ -2,11 +2,13 @@ import {
     admin_token
 } from "../../../const.js";
 import { applyParamtoPellet } from "../apply-param/pellet.js";
-import { blockchainProvider, maestroprovider, myWallet } from "../../../utils.js";
+import { blockchainProvider, maestroprovider, myWallet, writeScriptRefJson } from "../../../utils.js";
 import { Asset, conStr0, MeshTxBuilder, mNone, none } from "@meshsdk/core";
 import { applyParamtoDeploy } from "../apply-param/deploy.js";
 import { resolvePlutusScriptAddress} from "@meshsdk/core-csl";
 import { writeFile } from "fs/promises";
+import { join } from "path";
+import { readPelletsCsvFile } from "../../test/admin/pellet/utils.js";
 
 const utxos = await myWallet.getUtxos();
 const changeAddress = await myWallet.getChangeAddress();
@@ -47,11 +49,7 @@ async function deployPellet(){
     
     const signedTx = await myWallet.signTx(unsignedTx,true);
     const txHash = await myWallet.submitTx(signedTx);
-
-await writeFile(
-    "./scriptref-hash/pellet-script.json",
-    JSON.stringify({ txHash: txHash })
-    );
+    await writeScriptRefJson("pelletref",txHash)
+    return txHash;
 };
-
 export {deployPellet};

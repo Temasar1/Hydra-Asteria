@@ -7,31 +7,28 @@ import {
 } from "../../../const.js";
 import { 
     blockchainProvider, 
-    myWallet 
+    myWallet, 
+    readScripRefJson, 
+    writeScriptRefJson
 } from "../../../utils.js";
 import { 
     Asset,
     conStr0,
     MeshTxBuilder,
-    none,
     scriptHash 
 } from "@meshsdk/core";
 import { applyParamtoDeploy } from "../apply-param/deploy.js";
 import { resolvePlutusScriptAddress} from "@meshsdk/core-csl";
 import { applyParamtoSpacetime } from "../apply-param/spacetime.js";
-import { readFile, writeFile} from "fs/promises";
-
 
 const utxos = await myWallet.getUtxos();
 const changeAddress = await myWallet.getChangeAddress();
 
-const asteriaDeployScript = JSON.parse(
-    await readFile("./scriptref-hash/asteria-script.json", "utf-8"));
+const asteriaDeployScript = await readScripRefJson("asteriaref")
 if(!asteriaDeployScript.txHash){
     throw Error ("asteria script-ref not found, deploy asteria first.");
 };
-const pelletDeployScript = JSON.parse(
-    await readFile("./scriptref-hash/pellet-script.json", "utf-8"));
+const pelletDeployScript = await readScripRefJson("pelletref");
 if(!pelletDeployScript.txHash){
     throw Error ("pellet script-ref not found, deploy pellet first.");
 };
@@ -47,7 +44,6 @@ const deployScript = applyParamtoDeploy(
     admin_token
 );
 const deployScriptAddressBech32 = resolvePlutusScriptAddress(deployScript.plutusScript,0);
-
 const spacetimeScript = applyParamtoSpacetime(
     scriptHash(pelletScriptHash!),
     scriptHash(asteriaScriptHash!),
@@ -82,11 +78,7 @@ async function deploySpacetime(){
     
     const signedTx = await myWallet.signTx(unsignedTx);
     const txHash = await myWallet.submitTx(signedTx);
-    
-await writeFile(
-        "./scriptref-hash/spacetime-script.json",
-        JSON.stringify({ txHash: txHash })
-    );
+    await writeScriptRefJson("spacetimeref", txHash);
+    return txHash;
 };
-
 export {deploySpacetime};
