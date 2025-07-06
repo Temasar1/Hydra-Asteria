@@ -1,10 +1,13 @@
-import { fromScriptRef, toScriptRef } from "@meshsdk/core-cst";
-import { blockchainProvider, myWallet, readScripRefJson } from "../../utils.js";
+import { 
+    blockchainProvider, 
+    myWallet, 
+    readScripRefJson 
+} from "../../utils.js";
 import { 
     conStr1, 
+    conStr3, 
     deserializeDatum, 
     MeshTxBuilder, 
-    PlutusScript,
     stringToHex, 
     UTxO 
 } from "@meshsdk/core";
@@ -30,16 +33,21 @@ const spacetime_scriptref_utxo = await blockchainProvider.fetchUTxOs(spacetimeDe
 const shipyard_policyid =   spacetime_scriptref_utxo[0].output.scriptHash;
 
 const pellet_scriptref_utxo = await blockchainProvider.fetchUTxOs(pelletDeployScript.txHash);
-const pellet_scriptref = fromScriptRef(pellet_scriptref_utxo[0].output.scriptRef!);
-const pellet_plutus_script = pellet_scriptref as PlutusScript;
 const fuel_policyId = pellet_scriptref_utxo[0].output.scriptHash;
-
 const fuelTokenName = stringToHex("FUEL");
-const shipUtxos = await blockchainProvider.fetchUTxOs(ship_tx_hash)
+
+const shipUtxos = await blockchainProvider.fetchUTxOs(ship_tx_hash,1);
+
 const ship = shipUtxos[0];
-const shipInputFuel = ship.output.amount.find((Assets) =>
-   Assets.unit == shipyard_policyid + fuelTokenName
+if(!ship.output.plutusData){
+    throw new Error("ship datum not found");
+}
+const shipInputFuel = ship.output.amount.find((Asset) =>
+   Asset.unit == fuel_policyId + fuelTokenName
 );
+if(!shipInputFuel){
+    throw new Error ("ship input Fuel not found")
+}
 
 const shipInputData = ship.output.plutusData;
 const shipInputDatum = deserializeDatum(shipInputData!).fields;
@@ -53,21 +61,23 @@ const ship_datumLastMoveLatestTime: number = shipInputDatum[4].int;
 
 const burnShipRedeemer = conStr1([]);
 const burnfuelRedeemer = conStr1([]);
-const quitRedeemer = conStr1([]);
+const quitRedeemer = conStr3([]);
 
 const txbuilder = new MeshTxBuilder({
     submitter: blockchainProvider,
     fetcher: blockchainProvider,
+    evaluator: blockchainProvider,
     verbose: true
-})
-
-const unsignedTx   = await txbuilder
+});
+console.log('ship fuel', shipFuel)
+const unsignedTx = await txbuilder
 .spendingPlutusScriptV3()
 .txIn(
     ship.input.txHash,
     ship.input.outputIndex
 )
 .txInRedeemerValue(quitRedeemer, "JSON")
+.txInInlineDatumPresent()
 .spendingTxInReference(spacetimeDeployScript.txHash,0)
 
 .mintPlutusScriptV3()
@@ -76,7 +86,7 @@ const unsignedTx   = await txbuilder
 .mintRedeemerValue(burnShipRedeemer,"JSON")
 .mintPlutusScriptV3()
 .mint("-" + shipFuel,fuel_policyId!, fuelTokenName)
-.mintTxInReference(spacetimeDeployScript.txhash, 0)
+.mintTxInReference(pelletDeployScript.txHash, 0)
 .mintRedeemerValue(burnfuelRedeemer,"JSON")
 
 .txOut(myWallet.addresses.baseAddressBech32!, [{
