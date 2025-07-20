@@ -35,9 +35,10 @@ export const maestroprovider = new MaestroProvider({
 const blockData = await blockchainProvider.fetchLatestBlock();
 export const time = blockData.time;
 const slot = blockData.slot;
-export const tx_latest_slot = Number(slot) + 600;
+
+export const tx_latest_slot = Number(slot) + 300;
 export const tx_earliest_slot = Number(slot) - 60;
-export const tx_earliest_posix_time = time - 60 * 1000;     //- 1 minute from now
+//export const tx_earliest_posix_time = time - 60 * 1000;     //- 1 minute from now
 
 const __dirname = (process.cwd())
 const __filedir = join(__dirname, '/offchain/transactions/admin/deploy/ref-script/');
