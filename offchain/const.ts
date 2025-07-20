@@ -7,8 +7,8 @@ import {
 } from "@meshsdk/core";
 
 let admin_token = conStr0([
-  policyId("fbeafbfb456a440b174001793c546c93bdf887730c1e12b2f9f0d293"), 
-  assetName(stringToHex("Asteriatoken"))                              
+  policyId("9ff12b0c435fe2dc6dc58730713bad9ab1cec9ed0798dbe850538d03"), 
+  assetName(stringToHex("asteria-new"))                              
 ]);
 const ship_mint_lovelace_fee = integer(3000000);
 const max_asteria_mining = integer(50);

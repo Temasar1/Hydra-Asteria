@@ -1,8 +1,8 @@
 import { stringToHex } from "@meshsdk/core";
 
 export const admintoken = {
-  policyid: "fbeafbfb456a440b174001793c546c93bdf887730c1e12b2f9f0d293", 
-  name:      stringToHex("Asteriatoken")
+  policyid: "9ff12b0c435fe2dc6dc58730713bad9ab1cec9ed0798dbe850538d03", 
+  name:      stringToHex("asteria-new")
 };
 
 export const prizeToken = {
