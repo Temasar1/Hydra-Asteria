@@ -3,28 +3,15 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "build-godot": "mkdir public/visualizer; godot --path ../godot-visualizer --headless --export-release \"Web\" ../frontend/public/visualizer/index.html; cp public/godot.png public/visualizer/index.png",
-    "dev": "npm run build-godot; next dev",
+    "dev": "next dev",
     "build": "next build",
     "start": "next start"
   },
   "dependencies": {
-    "@apollo/client": "^3.11.8",
-    "@mdx-js/loader": "^3.0.1",
-    "@mdx-js/react": "^3.0.1",
-    "@meshsdk/core": "^1.9.0-beta.55",
-    "@meshsdk/react": "^1.9.0-beta.55",
-    "@next/mdx": "^14.2.15",
-    "@types/mdx": "^2.0.13",
-    "axios": "^1.9.0",
-    "graphql": "^16.9.0",
     "next": "14.2.15",
-    "next-mdx-remote": "^5.0.0",
     "react": "^18",
     "react-dom": "^18",
-    "shiki": "^1.23.1",
-    "socket.io-client": "^4.8.1",
-    "zustand": "^5.0.1"
+    "socket.io-client": "^4.8.1"
   },
   "devDependencies": {
     "@tailwindcss/forms": "^0.5.9",

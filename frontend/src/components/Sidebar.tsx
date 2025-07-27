@@ -19,7 +19,7 @@ const Item = ({
     <Link
       href={href}
       className={`block w-full py-3 px-4 rounded-lg text-lg text-left font-dmsans-regular ${
-        active ? "bg-[#07F3E6] text-black" : "text-gray-400"
+        active ? "bg-[#e9ebee] text-black" : "text-gray-400"
       }`}
     >
       {children}
