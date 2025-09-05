@@ -73,7 +73,7 @@ const shipDatumShipTokenName: string = shipInputDatum[2].bytes;
 const shipDatumPilotTokenName:string = shipInputDatum[3].bytes;
 const shipDatumLastMoveLatestTime: number = shipInputDatum[4].int;
 
-const upperBoundTime = Date.now() * 5 * 60 * 1000;
+const upperBoundTime = Date.now() + 5 * 60 * 1000;
 const lowerBoundTime = Date.now();
 
 const shipOutputDatum = conStr0([
@@ -84,11 +84,11 @@ const shipOutputDatum = conStr0([
     posixTime(upperBoundTime)
 ]);
 
-const upperboundSlot = unixTimeToEnclosingSlot(upperBoundTime, SLOT_CONFIG_NETWORK.preprod);
-const lowerBoundSlot = unixTimeToEnclosingSlot(lowerBoundTime, SLOT_CONFIG_NETWORK.preprod)
+// const upperboundSlot = unixTimeToEnclosingSlot(upperBoundTime, SLOT_CONFIG_NETWORK.preprod);
+// const lowerBoundSlot = unixTimeToEnclosingSlot(lowerBoundTime, SLOT_CONFIG_NETWORK.preprod)
 
-console.log(upperboundSlot)
-console.log(lowerBoundSlot)
+// console.log(upperboundSlot)
+// console.log(lowerBoundSlot)
 //get distance and fuel for distance
 function distance (delta_X: number , delta_Y: number){
     return Math.abs(delta_X) + Math.abs(delta_Y);
@@ -163,7 +163,7 @@ const unsignedTx = await txbuilder
     .setNetwork("preprod")
     .complete();
   
-const  signedTx = await myWallet.signTx(unsignedTx, true);
+const  signedTx = await myWallet.signTx(unsignedTx);
 const  moveshipTxhash = await myWallet.submitTx(signedTx);
 return moveshipTxhash;
 };

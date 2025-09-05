@@ -1,4 +1,5 @@
 import { Server, Socket } from "socket.io";
+import 'dotenv/config';
 import { createServer } from "http";
 import express from "express";
 import { createShip } from '../offchain/transactions/user/create-ship.js';
@@ -8,6 +9,7 @@ import { moveShip } from '../offchain/transactions/user/move-ship.js';
 import { quit } from '../offchain/transactions/user/quit.js';
 import { writeFile, readFile } from "fs/promises";
 import { readPelletsCsvFile } from "../offchain/transactions/test/admin/pellet/utils.js";
+import { HydraProvider } from "@meshsdk/hydra";
 
 interface Ship {
   id: number;
@@ -34,6 +36,10 @@ const io = new Server(httpServer, {
     origin: "http://localhost:3000",
     methods: ["GET", "POST"],
   },
+});
+
+const hydraProvider = new HydraProvider({
+  url: process.env.HYDRA_URL ?? "http://localhost:4001",
 });
 
 const gameState: GameState = {
@@ -169,7 +175,8 @@ io.on("connection", async (socket: Socket) => {
           collectedPellet.fuel,
           shipTxHash,
           "67f5d630bae3da4bea5cb2b87f38da33e6f0d7b91665be94e2396c7c791423f3",
-          collectedPellet.id
+          collectedPellet.id,
+          hydraProvider
         );
         if (!fuelTxHash) {
           console.error("Failed to gather fuel, txHash:", fuelTxHash);
@@ -235,7 +242,7 @@ io.on("connection", async (socket: Socket) => {
   });
 });
 
-const PORT = 3001;
+const PORT = Number(process.env.PORT ?? 4001);
 httpServer.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });

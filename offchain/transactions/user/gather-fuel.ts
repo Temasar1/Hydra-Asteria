@@ -21,6 +21,7 @@ import {
 import { fromScriptRef} from "@meshsdk/core-cst";
 import { admintoken} from "../../config.js";
 import { tx_earliest_slot } from "../../utils.js";
+import { HydraProvider } from "@meshsdk/hydra";
 
 const changeAddress = await myWallet.getChangeAddress();
 const collateral: UTxO = (await myWallet.getCollateral())[0]!;
@@ -31,6 +32,7 @@ async function gatherFuel(
     ship_tx_hash: string,
     pellet_tx_Hash: string,
     pellet_tx_index: number,
+    _hydra: unknown
 ){
 const spacetimeDeployScript = await readScripRefJson('spacetimeref');
 if(!spacetimeDeployScript.txHash){
@@ -96,15 +98,13 @@ const shipTokenName: string = shipInputDatum[2].bytes;
 const pilotTokenName: string= shipInputDatum[3].bytes;
 const lastMoveLatestTime: number = shipInputDatum[4].int;
 
-const ttl = Date.now() + 30 * 60 * 1000;
-
 //Ship output Datum
 const shipOutDatum = conStr0([
     integer(ShipPosX),
     integer(shipPoxY),
     byteString(shipTokenName),
     byteString(pilotTokenName),
-    integer(ttl),
+    integer(lastMoveLatestTime),
 ]);
 
 console.log(shipOutDatum);
@@ -163,9 +163,7 @@ const unsignedTx = await txBuilder
 .spendingPlutusScriptV3()
 .txIn(
     pellet.input.txHash,
-    pellet.input.outputIndex,
-    pellet.output.amount,
-    pellet.output.address
+    pellet.input.outputIndex
 )
 .spendingReferenceTxInRedeemerValue(shipRedeemer, "JSON")
 .spendingTxInReference(spacetimeDeployScript.txHash,0)
@@ -176,9 +174,7 @@ const unsignedTx = await txBuilder
 .spendingPlutusScriptV3()
 .txIn(
     ship.input.txHash,
-    ship.input.outputIndex,
-    ship.output.amount,
-    ship.output.address
+    ship.input.outputIndex
 )
 .spendingReferenceTxInRedeemerValue(pelletRedemer,"JSON")
 .spendingTxInReference(pelletDeployScript.txHash,0)
