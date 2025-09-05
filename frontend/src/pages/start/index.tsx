@@ -51,7 +51,7 @@ const GameStart: React.FC = () => {
 
     socket.on("pellet-collected", (data: { pelletId: number }) => {
       console.log("Received pellet-collected:", data);
-      setPellets((prev) => prev.filter((p) => pिनी.id !== data.pelletId));
+      setPellets((prev) => prev.filter((p) => p.id !== data.pelletId));
     });
 
     socket.on("asteria-mined", (data: { username: string }) => {
@@ -131,7 +131,7 @@ const GameStart: React.FC = () => {
   };
 
   const handleQuit = () => {
-    const username = "currentUser"; // Replace with actual username
+    const username = "currentUser";
     socket.emit("quit", { username });
     localStorage.removeItem("initialGameState");
     console.log("Game state cleared from localStorage");
