@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from "react";
 import getSocket from "../../../apis/connection";
 import { useRouter } from "next/router";
-import { CardanoWallet } from "@meshsdk/react";
-import {BrowserWallet} from "@meshsdk/core"
+
 
 interface Ship {
   id: number;
@@ -26,6 +25,7 @@ const GameSetup: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [pendingShips, setPendingShips] = useState<Ship[]>([]);
   const [pendingPellets, setPendingPellets] = useState<Pellet[]>([]);
+  const [hydraUrl, setHydraUrl] = useState<string>("")
 
   useEffect(() => {
     const handleCreateShipCoordinates = (data: { coordinatesArray: Ship[] }) => {
@@ -48,14 +48,12 @@ const GameSetup: React.FC = () => {
   }, [socket]);
 
   useEffect(() => {
-    // Redirect when both ships and pellets are received
     if (pendingShips.length > 0 && pendingPellets.length > 0 && isLoading) {
-      console.log("Redirecting to /start with ships and pellets");
-      // Store initial state in localStorage for GameStart
       localStorage.setItem("initialGameState", JSON.stringify({
         ships: pendingShips,
         pellets: pendingPellets,
         username,
+        hydraUrl
       }));
       setIsLoading(false);
       router.push("/start");
@@ -67,14 +65,20 @@ const GameSetup: React.FC = () => {
     setError("");
     setIsLoading(true);
 
+    if(!hydraUrl.trim()) {
+      setError("Enter your Hydra API URL");
+      setIsLoading(false);
+      return
+    }
+
     if (!username.trim()) {
-      setError("Please enter a username");
+      setError("Enter a username");
       setIsLoading(false);
       return;
     }
 
     if (!shipsCount || shipsCount < 1 || shipsCount > 5) {
-      setError("Please enter a number of ships between 1 and 5");
+      setError("Enter a number of ships between 1 and 5");
       setIsLoading(false);
       return;
     }
@@ -94,24 +98,25 @@ const GameSetup: React.FC = () => {
     socket.emit("initial-shipCoordinates", {
       shipProperty: { username, ships: shipProps },
     });
+    socket.emit("hydra-url", {
+      hydraUrl
+    })
   };
 
   return (
-    <div className="flex flex-col items-center justify-center h-screen gap-6 p-4 text-white bg-gray-900">
-      <div className="absolute top-4 right-4 border border-black rounded">
-        <CardanoWallet
-          label="Connect Wallet"
-          isDark={false}
-          persist={true}
-          onConnected={(wallet: BrowserWallet) => {
-        console.log("Wallet connected:", wallet);
-          }}
-        />
-      </div>
-      <h1 className="text-4xl font-bold">Hydra-Asteria</h1>
-      {error && <p className="text-red-500">{error}</p>}
-      {isLoading && <p className="text-yellow-400">Creating game...</p>}
+    <div className=" bg-starfield bg-cover flex flex-col items-center justify-center h-screen gap-6 p-4 text-white">
+      <img src="/hydra.svg" className="h-[17vh] mb-5" />
+      {error && <p className="text-white-500">{error}</p>}
+      {isLoading && <p className="text-white-400">Creating game...</p>}
       <form onSubmit={handleCreateGame} className="flex flex-col gap-4 w-full max-w-md">
+      <input
+          type="url"
+          placeholder="Enter hydra API URL"
+          value={hydraUrl}
+          onChange={(e) => setHydraUrl(e.target.value)}
+          className="rounded-full border border-gray-300 px-4 py-2 text-black"
+          disabled={isLoading}
+        />
         <input
           type="text"
           placeholder="Enter your username"
@@ -133,7 +138,7 @@ const GameSetup: React.FC = () => {
         <div className="text-center mt-8">
           <button
             type="submit"
-            className="text-black bg-[#07F3E6] py-4 px-8 rounded-full text-lg disabled:opacity-50"
+            className="font-monocraft-regular text-black bg-[#e9ebee] py-4 px-8 rounded-full text-lg disabled:opacity-50"
             disabled={isLoading}
           >
             Create Game
