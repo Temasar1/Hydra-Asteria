@@ -8,10 +8,18 @@
     "start": "next start"
   },
   "dependencies": {
+    "@mdx-js/loader": "^3.1.1",
+    "@mdx-js/react": "^3.1.1",
+    "@meshsdk/react": "^1.9.0-beta.73",
+    "@next/mdx": "^15.5.2",
+    "@utxorpc/sdk": "^0.7.0",
     "next": "14.2.15",
+    "next-mdx-remote": "^5.0.0",
     "react": "^18",
     "react-dom": "^18",
-    "socket.io-client": "^4.8.1"
+    "shiki": "^3.12.2",
+    "socket.io-client": "^4.8.1",
+    "zustand": "^5.0.8"
   },
   "devDependencies": {
     "@tailwindcss/forms": "^0.5.9",

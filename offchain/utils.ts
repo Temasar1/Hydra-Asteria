@@ -1,8 +1,6 @@
 import { MeshWallet, BlockfrostProvider, MaestroProvider} from "@meshsdk/core";
-import fs from 'fs';
 import { readFile, writeFile } from "fs/promises";
-import path, { dirname, join } from 'path';
-import { fileURLToPath } from "url";
+import { join } from 'path';
 
 // const blockfrostApiKey = process.env.BLOCKFROST_APIKEY;
 // //const seedPhrase  = process.env.SEED_PHRASE?.split(',')!

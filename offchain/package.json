@@ -5,17 +5,17 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-  "dev": "tsup --watch",
-  "build": "tsup",
-  "start": "node dist/index.js"
-   },
+    "dev": "tsup --watch",
+    "build": "tsup",
+    "start": "node dist/index.js"
+  },
   "author": "temasar",
   "license": "ISC",
   "dependencies": {
     "@meshsdk/core": "^1.9.0-beta.54",
     "@meshsdk/core-csl": "^1.9.0-beta.4",
     "@meshsdk/core-cst": "^1.9.0-beta.4",
-    "@meshsdk/hydra": "^1.9.0-beta-39"
+    "@meshsdk/hydra": "^1.9.0-beta.69"
   },
   "devDependencies": {
     "@types/node": "^22.15.32",

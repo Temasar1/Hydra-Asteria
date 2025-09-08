@@ -27,7 +27,7 @@ export default function Landing() {
             </Link>
           </div>
           <div className="text-center mt-8">
-            <Link href="/game-setup">
+            <Link href="/start">
               <button className="font-monocraft-regular text-black bg-[#e9ebee] py-4 px-8 rounded-full text-lg">
                 Game-setup
               </button>
