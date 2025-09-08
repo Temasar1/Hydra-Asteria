@@ -1,5 +1,7 @@
+
 import React, { useEffect, useRef, useState } from "react";
 import getSocket from "../../../apis/connection";
+import GameSetup from "@/components/setup";
 
 interface Ship {
   id: number;
@@ -145,7 +147,7 @@ const GameStart: React.FC = () => {
       tabIndex={0}
       className="relative w-full h-screen flex items-center justify-center overflow-hidden outline-none"
       style={{
-        backgroundImage: "url('/starfield_front.png')",
+        backgroundImage: "url('/starfield.png')",
         backgroundSize: "cover",
         backgroundPosition: "center",
       }}
@@ -169,9 +171,9 @@ const GameStart: React.FC = () => {
         </div>
       ))}
       <img
-        src="/favicon.png"
+        src="/asteria-light.png"
         alt="asteria"
-        className="absolute w-16 h-16"
+        className="absolute w-20 h-20"
         style={{
           left: "50%",
           top: "50%",
@@ -226,6 +228,30 @@ const GameStart: React.FC = () => {
           quit
         </button>
       </div>
+      {/* Game Setup overlay */}
+      <div
+        style={{
+          position: "fixed",
+          inset: 0,
+          zIndex: 1000,
+          width: "100vw",
+          height: "100vh",
+          background: "inherit"
+        }}
+      >
+        <GameSetup />
+      </div>
+      {/* Decorative floating elements */}
+      <img
+        src="/landing-fuel-1.svg"
+        className="absolute bottom-8 left-8 w-16 h-16 animate-float-slow opacity-80 z-10"
+        alt="Fuel"
+      />
+      <img
+        src="/landing-ship-2.svg"
+        className="absolute top-8 right-8 w-16 h-16 animate-float-fast opacity-80 z-10"
+        alt="Ship"
+      />
     </div>
   );
 };
