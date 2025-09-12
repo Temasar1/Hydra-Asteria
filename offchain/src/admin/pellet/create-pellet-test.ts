@@ -1,18 +1,19 @@
-import { createPellet } from "../../../admin/pellet/create-pellet.js";
+import { createPellet } from "./create-pellet.js";
 import { writeFile } from "fs/promises";
 import { writePelletsCsvFIle } from "./utils.js";
+import { __dirname } from "./utils.js";
+import { join } from "node:path";
 
-async function createPelletTest(){
+async function createPelletTest(number_of_pellets: number){
 let pellets: { posX: number; posY: number; fuel: string }[] = [];
 let totalFuel = 0;
-    const numberOfPellets = 30;
         function generateRandomFuelProperty() {
             const posX = Math.floor(Math.random() * 101) - 50;
             const posY = Math.floor(Math.random() * 101) - 50;
             const fuel = (Math.floor(Math.random() * (200 - 50 + 1)) + 50).toString();
         return {fuel, posX, posY};
     };
-    for(let i = 0; i < numberOfPellets; i++){
+    for(let i = 0; i < number_of_pellets; i++){
         const {posX, posY, fuel} = generateRandomFuelProperty();
         const pelletProperty = {
             posX,
@@ -29,7 +30,7 @@ const txHash = await createPellet(
     totalFuel.toString()
 );
 
-await writeFile('./backend/user-hash/pellets.json', JSON.stringify({txHash: txHash }));
+await writeFile(join(__dirname, 'pellets.json'), JSON.stringify({txHash: txHash }));
 return txHash;
 }
 export {createPelletTest};

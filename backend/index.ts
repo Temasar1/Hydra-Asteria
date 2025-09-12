@@ -2,13 +2,13 @@ import { Server, Socket } from "socket.io";
 import 'dotenv/config';
 import { createServer } from "http";
 import express from "express";
-import { createShip } from '../offchain/transactions/user/create-ship.js';
-import { gatherFuel } from '../offchain/transactions/user/gather-fuel.js';
-import { mineAsteria } from '../offchain/transactions/user/mine-asteria.js';
-import { moveShip } from '../offchain/transactions/user/move-ship.js';
-import { quit } from '../offchain/transactions/user/quit.js';
+import { createShip } from '../offchain/src/user/create-ship.js';
+import { gatherFuel } from '../offchain/src/user/gather-fuel.js';
+import { mineAsteria } from '../offchain/src/user/mine-asteria.js';
+import { moveShip } from '../offchain/src/user/move-ship.js';
+import { quit } from '../offchain/src/user/quit.js';
 import { writeFile, readFile } from "fs/promises";
-import { readPelletsCsvFile } from "../offchain/transactions/test/admin/pellet/utils.js";
+import { readPelletsCsvFile } from "../offchain/src/test/admin/pellet/utils.js";
 import { HydraProvider } from "@meshsdk/hydra";
 
 interface Ship {

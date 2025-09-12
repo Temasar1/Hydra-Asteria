@@ -101,7 +101,7 @@ async function createShip(posX: number, posY: number) {
     "PILOT" + asteriaInputShipcounter.toString()
   ); //ship counter from Datum
 
-  const upperBoundTime = Date.now() + 5 * 60 * 1000; //5 minutes game time
+  const upperBoundTime = Date.now() + 5 * 60 * 1000;
 
   const shipDatum = conStr0([
     integer(posX),

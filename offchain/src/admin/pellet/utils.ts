@@ -14,7 +14,7 @@ export const writePelletsCsvFIle = async (pellets: {
 }[]) => {
 
     const csvFilePath = 
-    join(process.cwd(), "offchain/transactions/test/admin/pellet/pellets.csv");
+    join(__dirname, "pellets.csv");
     
     const csvHeaders = "posX,posY,fuel\n";
     const csvData = pellets.map(pellet => `${pellet.posX},${pellet.posY},${pellet.fuel}`).join("\n");
@@ -25,13 +25,13 @@ export const writePelletsCsvFIle = async (pellets: {
 
 export const readPelletsCsvFile = async () => {
   console.log('Reading CSV from:', csvToDist);
-  const csvFilePath = join(process.cwd(), "transactions/test/admin/pellet/pellets.csv");
+  const csvFilePath = join(__dirname, "pellets.csv");
   if (existsSync(csvToDist)) {
     const csvContent = await readFile(csvToDist || csvFilePath, 'utf8');
     const readPellet = csvContent
       .split("\n")
-      .slice(1) // Skip the header row
-      .filter(line => line.trim() !== "") // Remove empty lines
+      .slice(1)
+      .filter(line => line.trim() !== "")
       .map(line => {
         const [posX, posY, fuel] = line.split(",");
         return {
@@ -45,3 +45,4 @@ export const readPelletsCsvFile = async () => {
     throw new Error("Unable to read pellets");
   }
 };
+export { __dirname };

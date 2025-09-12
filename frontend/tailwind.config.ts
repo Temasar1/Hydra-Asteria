@@ -13,7 +13,7 @@ const config: Config = {
         foreground: "var(--foreground)",
       },
       backgroundImage: {
-        'starfield': 'url(\'/starfield.svg\')',
+        'starfield': 'url(\'/starfield.png\')',
         'challenge': 'url(\'/challenge.png\')',
       },
       fontFamily: {
