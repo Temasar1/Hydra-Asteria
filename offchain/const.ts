@@ -7,17 +7,17 @@ import {
 } from "@meshsdk/core";
 
 let admin_token = conStr0([
-  policyId("9ff12b0c435fe2dc6dc58730713bad9ab1cec9ed0798dbe850538d03"), 
-  assetName(stringToHex("asteria-new"))                              
+  policyId("b1c4161244ba39de0bdbec6131b931252cc0369b84fa345a99576a02"), 
+  assetName(stringToHex("hydra-asteria"))                              
 ]);
 const ship_mint_lovelace_fee = integer(3000000);
 const max_asteria_mining = integer(50);
 const max_speed = conStr0([
-  integer(1),      //distance
-  integer(30000)   //time
+  integer(1), 
+  integer(30000)   
 ]);
 const max_ship_fuel = integer(300);
-const fuel_per_step = integer(20);
+const fuel_per_step = integer(10);
 const initial_fuel = integer(100);
 const min_asteria_distance = integer(10);
 
