@@ -1,6 +1,5 @@
-
 import { applyParamsToScript } from "@meshsdk/core-cst";
-import plutusBlueprint from "../../../../onchain/src/plutus.json" with {type: 'json'};
+import plutusBlueprint from "../../../plutus.json" with {type: 'json'};
 import { PlutusScript } from "@meshsdk/core";
     
 const pelletValidator = plutusBlueprint.validators.find(
