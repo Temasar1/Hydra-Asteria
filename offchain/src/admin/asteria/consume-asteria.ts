@@ -8,6 +8,7 @@ import { conStr2, MeshTxBuilder } from "@meshsdk/core";
 
 const utxos = await myWallet.getUtxos();
 const changeAddress = await myWallet.getChangeAddress();
+const collateral = (await myWallet.getCollateral())[0]!;
 
 const consumeAsteria = async (asteriaUtxo: {
   txHash: string;
@@ -50,7 +51,7 @@ const consumeAsteria = async (asteriaUtxo: {
     .spendingTxInReference(asteriaDeployScript.txHash, 0)
 
     .txIn(adminUtxo.input.txHash, adminUtxo.input.outputIndex)
-
+    .txInCollateral(collateral.input.txHash,collateral.input.outputIndex)
     .selectUtxosFrom(utxos)
     .setNetwork("preprod")
     .changeAddress(changeAddress)
