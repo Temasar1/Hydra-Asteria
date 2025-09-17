@@ -18,17 +18,15 @@ import {
   blockchainProvider,
   myWallet,
   readScripRefJson,
-  tx_latest_slot,
 } from "../../utils.js";
 import { ship_mint_lovelace_fee, initial_fuel } from "../../config.js";
 import { admintoken } from "../../config.js";
-import { fromScriptRef, Slot } from "@meshsdk/core-cst";
+import { fromScriptRef} from "@meshsdk/core-cst";
 import { maestroprovider } from "../../utils.js";
 
 const changeAddress = await myWallet.getChangeAddress();
 const collateral: UTxO = (await myWallet.getCollateral())[0]!;
 const utxos = await myWallet.getUtxos();
-//const utxos = await blockchainProvider.fetchUTxOs("420d1b6ddff2ce1188a3d9c37459fa6325d0f1aea6dcc9b3ec1a4de9a017e59e",0);
 
 async function createShip(posX: number, posY: number) {
   const asteriaDeployScript = await readScripRefJson("asteriaref");
@@ -89,17 +87,17 @@ async function createShip(posX: number, posY: number) {
   const asteriaInputShipYardPolicyId = asteriaInputDatum[1].bytes;
 
   const asteriaOutputDatum = conStr0([
-    integer(Number(asteriaInputShipcounter) + 1), //add number of ships(ship Counter)
+    integer(Number(asteriaInputShipcounter) + 1),
     policyId(asteriaInputShipYardPolicyId),
   ]);
 
   const fuelTokenName = stringToHex("FUEL");
   const shipTokenName = stringToHex(
     "SHIP" + asteriaInputShipcounter.toString()
-  ); //ship counter from Datum
+  ); 
   const pilotTokenName = stringToHex(
     "PILOT" + asteriaInputShipcounter.toString()
-  ); //ship counter from Datum
+  ); 
 
   const upperBoundTime = Date.now() + 5 * 60 * 1000;
 
@@ -115,9 +113,7 @@ async function createShip(posX: number, posY: number) {
     upperBoundTime,
     SLOT_CONFIG_NETWORK.preprod
   );
-  console.log(tx_latest_slot);
 
-  //defining assets
   const assetToSpacetimeAddress: Asset[] = [
     {
       unit: shipyardPolicyid! + shipTokenName,
@@ -157,7 +153,7 @@ async function createShip(posX: number, posY: number) {
     evaluator: blockchainProvider,
     verbose: true,
   });
-  console.log(shipDatum);
+
   const unsignedTx = await txBuilder
     .spendingPlutusScriptV3()
     .txIn(asteria.input.txHash, asteria.input.outputIndex)
