@@ -24,7 +24,7 @@ const NavBar: React.FunctionComponent = () => {
           </div>
           {pathname !== '/' && (
             <span className="font-inter-regular text-md text-[#606060] ml-[-16px] pointer-events-none">
-              By TxPipe
+              By Mesh
             </span>
           )}
         </div>
