@@ -87,6 +87,7 @@ const commit_pellets_utxos = async (
       .txInRedeemerValue(consumePelletRedeemer, "JSON");
   }
   txbuilder
+    .txIn(addressUtxos.input.txHash, addressUtxos.input.outputIndex)
     .txInCollateral(collateral.input.txHash, collateral.input.outputIndex)
     .setNetwork("preprod")
     .changeAddress(changeAddress)

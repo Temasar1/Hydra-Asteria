@@ -67,15 +67,15 @@ const commit_asteria_utxo = async (
     .complete();
 
   const tx = await hydraInstance.commitBlueprint(
-    asteria.input.txHash,
-    asteria.input.outputIndex,
+    asteriaUtxo.txHash,
+    asteriaUtxo.txIndex,
     {
       cborHex: unsignedTx,
       description: "asteria commit",
-      type: "Tx ConwayEra",
+      type: "Witnessed Tx ConwayEra",
     }
   );
-
+  console.log("tx", tx);
   const signedTx = await myWallet.signTx(tx, true);
   const txHash = await myWallet.submitTx(signedTx);
   return txHash;
