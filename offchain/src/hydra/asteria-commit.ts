@@ -1,19 +1,28 @@
-import {
-  blockchainProvider,
-  myWallet,
-  readScripRefJson,
-} from "../../../utils.js";
-import { admintoken } from "../../../config.js";
+import { blockchainProvider, myWallet, readScripRefJson } from "../../utils.js";
+import { admintoken } from "../../config.js";
 import { conStr2, MeshTxBuilder } from "@meshsdk/core";
+import { HydraInstance, HydraProvider } from "@meshsdk/hydra";
 
 const utxos = await myWallet.getUtxos();
 const changeAddress = await myWallet.getChangeAddress();
 const collateral = (await myWallet.getCollateral())[0]!;
 
-const consumeAsteria = async (asteriaUtxo: {
-  txHash: string;
-  txIndex: number;
-}) => {
+const commit_asteria_utxo = async (
+  asteriaUtxo: {
+    txHash: string;
+    txIndex: number;
+  },
+  hydra_url: string
+) => {
+  const hydraProvider = new HydraProvider({
+    httpUrl: hydra_url,
+  });
+  const hydraInstance = new HydraInstance({
+    provider: hydraProvider,
+    fetcher: blockchainProvider,
+    submitter: blockchainProvider,
+  });
+
   const asteriaDeployScript = await readScripRefJson("asteriaref");
   if (!asteriaDeployScript.txHash) {
     throw Error("asteria script-ref not found, deploy asteria first.");
@@ -28,9 +37,9 @@ const consumeAsteria = async (asteriaUtxo: {
   const adminTokenUnit = admintoken.policyid + admintoken.name;
   const adminUTxOs = await myWallet
     .getUtxos()
-    .then((us) =>
-      us.filter((u) =>
-        u.output.amount.find((Asset) => Asset.unit === adminTokenUnit)
+    .then((us: any) =>
+      us.filter((u: any) =>
+        u.output.amount.find((Asset: any) => Asset.unit === adminTokenUnit)
       )
     );
 
@@ -51,15 +60,25 @@ const consumeAsteria = async (asteriaUtxo: {
     .spendingTxInReference(asteriaDeployScript.txHash, 0)
 
     .txIn(adminUtxo.input.txHash, adminUtxo.input.outputIndex)
-    .txInCollateral(collateral.input.txHash,collateral.input.outputIndex)
+    .txInCollateral(collateral.input.txHash, collateral.input.outputIndex)
     .selectUtxosFrom(utxos)
     .setNetwork("preprod")
     .changeAddress(changeAddress)
     .complete();
 
-  const signedTx = await myWallet.signTx(unsignedTx);
+  const tx = await hydraInstance.commitBlueprint(
+    asteriaUtxo.txHash,
+    asteriaUtxo.txIndex,
+    {
+      cborHex: unsignedTx,
+      description: "asteria commit",
+      type: "Witnessed Tx ConwayEra",
+    }
+  );
+  console.log("tx", tx);
+  const signedTx = await myWallet.signTx(tx, true);
   const txHash = await myWallet.submitTx(signedTx);
   return txHash;
 };
 
-export { consumeAsteria };
+export { commit_asteria_utxo };

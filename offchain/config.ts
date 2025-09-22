@@ -1,8 +1,8 @@
 import { stringToHex } from "@meshsdk/core";
 
 export const admintoken = {
-  policyid: "9ff12b0c435fe2dc6dc58730713bad9ab1cec9ed0798dbe850538d03", 
-  name:      stringToHex("asteria-new")
+  policyid: "b1c4161244ba39de0bdbec6131b931252cc0369b84fa345a99576a02", 
+  name:      stringToHex("hydra-asteria")
 };
 
 export const prizeToken = {
@@ -24,4 +24,4 @@ export const max_asteria_mining: number = 50;
 export const max_ship_fuel: number = 300;
 export const initial_fuel: string = "100";
 export const min_asteria_distance: number = 10;
-export const fuel_per_step: number = 20;
+export const fuel_per_step: number = 10;

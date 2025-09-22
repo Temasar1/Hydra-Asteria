@@ -1,11 +1,10 @@
-
 import { 
   Integer, 
   PlutusScript, 
   ScriptHash
 } from "@meshsdk/core";
 import { applyParamsToScript } from "@meshsdk/core-cst";
-import plutusBlueprint from "../../../../onchain/src/plutus.json" with {type: 'json'};
+import plutusBlueprint from "../../../plutus.json" with {type: 'json'};
 
 const asteriaValidator = plutusBlueprint.validators.find(
         ({ title }) => title === "asteria.asteria.spend"
