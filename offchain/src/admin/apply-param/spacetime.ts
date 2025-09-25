@@ -12,7 +12,6 @@ function applyParamtoSpacetime (
    pelletScriptAddress:ScriptHash,
    asteriaScriptAddress:ScriptHash,
    admin_token:any,
-   max_speed:any,
    max_ship_fuel:Integer,
    fuel_per_step: Integer
 ){
@@ -21,7 +20,6 @@ function applyParamtoSpacetime (
         [   pelletScriptAddress,
             asteriaScriptAddress,
             admin_token,
-            max_speed,
             max_ship_fuel,
             fuel_per_step
         ],
