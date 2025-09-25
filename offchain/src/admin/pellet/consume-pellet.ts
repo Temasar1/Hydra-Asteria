@@ -34,6 +34,7 @@ const consumePellets = async (pelletTxhash: string) => {
     output: utxo.output,
   }));
 
+  
   const totalFuel = pellets.reduce((sum, pellet) => {
     const asset = pellet.output.amount.find(
       (asset) => asset.unit === fuel_policyId + fuelTokenName
@@ -41,6 +42,7 @@ const consumePellets = async (pelletTxhash: string) => {
     return sum + (Number(asset?.quantity) || 0);
   }, 0);
 
+  console.log('total fuel', totalFuel)
   const addressUtxos = await myWallet
     .getUtxos()
     .then((us) =>
@@ -55,6 +57,7 @@ const consumePellets = async (pelletTxhash: string) => {
   const consumePelletRedeemer = conStr1([]);
   const burnfuelRedeemer = conStr1([]);
 
+  //TO DO: UTxO selection to filer spent outputs
   const txbuilder = new MeshTxBuilder({
     submitter: blockchainProvider,
     fetcher: blockchainProvider,
@@ -63,6 +66,9 @@ const consumePellets = async (pelletTxhash: string) => {
   });
 
   for (const pellet of pellets) {
+    if(pellet.input.txHash === undefined || !pellet.input.txHash){
+      continue
+    }
     txbuilder
       .spendingPlutusScriptV3()
       .txIn(pellet.input.txHash, pellet.input.outputIndex)
