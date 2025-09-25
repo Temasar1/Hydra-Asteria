@@ -9,8 +9,10 @@
   "scripts": {
     "build": "tsc && npm run copy-assets",
     "copy-assets": "copyfiles \"backend/**/*.{json,csv}\" \"offchain/**/*.{json,csv}\" dist",
-    "dev": "concurrently \"npm --prefix frontend run dev\" \"tsx backend/index.ts\"",
-    "start": "node dist/offchain/index.js"
+    "dev": "concurrently \"npm --prefix frontend run dev\" \"tsx -r ./load-env.js backend/index.ts\"",
+    "start": "node -r ./load-env.js dist/offchain/index.js",
+    "start:backend": "tsx -r ./load-env.js backend/index.ts",
+    "start:offchain": "tsx -r ./load-env.js offchain/index.ts"
   },
   "devDependencies": {
     "concurrently": "^8.2.2",
@@ -27,8 +29,7 @@
   },
   "dependencies": {
     "@meshsdk/core": "^1.9.0-beta.73",
-    "@utxorpc/sdk": "^0.7.0",
-    "shiki": "^3.12.2",
-    "zustand": "^5.0.8"
+    "@meshsdk/core-cst": "^1.9.0-beta.74",
+    "@meshsdk/hydra": "^1.9.0-beta.74"
   }
 }
