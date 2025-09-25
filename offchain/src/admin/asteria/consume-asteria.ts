@@ -10,19 +10,13 @@ const utxos = await myWallet.getUtxos();
 const changeAddress = await myWallet.getChangeAddress();
 const collateral = (await myWallet.getCollateral())[0]!;
 
-const consumeAsteria = async (asteriaUtxo: {
-  txHash: string;
-  txIndex: number;
-}) => {
+const consumeAsteria = async (asteriaTxHash: string) => {
   const asteriaDeployScript = await readScripRefJson("asteriaref");
   if (!asteriaDeployScript.txHash) {
     throw Error("asteria script-ref not found, deploy asteria first.");
   }
 
-  const asteriaUtxos = await blockchainProvider.fetchUTxOs(
-    asteriaUtxo.txHash,
-    asteriaUtxo.txIndex
-  );
+  const asteriaUtxos = await blockchainProvider.fetchUTxOs(asteriaTxHash, 0);
   const asteria = asteriaUtxos[0];
 
   const adminTokenUnit = admintoken.policyid + admintoken.name;
@@ -51,7 +45,7 @@ const consumeAsteria = async (asteriaUtxo: {
     .spendingTxInReference(asteriaDeployScript.txHash, 0)
 
     .txIn(adminUtxo.input.txHash, adminUtxo.input.outputIndex)
-    .txInCollateral(collateral.input.txHash,collateral.input.outputIndex)
+    .txInCollateral(collateral.input.txHash, collateral.input.outputIndex)
     .selectUtxosFrom(utxos)
     .setNetwork("preprod")
     .changeAddress(changeAddress)
