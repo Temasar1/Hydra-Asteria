@@ -33,7 +33,7 @@ async function quit(ship_tx_hash: string) {
   const fuel_policyId = pellet_scriptref_utxo[0].output.scriptHash;
   const fuelTokenName = stringToHex("FUEL");
 
-  const shipUtxos = await blockchainProvider.fetchUTxOs(ship_tx_hash, 0);
+  const shipUtxos = await blockchainProvider.fetchUTxOs(ship_tx_hash, 1);
 
   const ship = shipUtxos[0];
   if (!ship.output.plutusData) {
@@ -54,7 +54,6 @@ async function quit(ship_tx_hash: string) {
   const ship_datum_PosY: number = shipInputDatum[1].int;
   const ship_datum_ShipTokenName: string = shipInputDatum[2].bytes;
   const ship_datum_PilotTokenName: string = shipInputDatum[3].bytes;
-  const ship_datumLastMoveLatestTime: number = shipInputDatum[4].int;
 
   const burnShipRedeemer = conStr1([]);
   const burnfuelRedeemer = conStr1([]);
