@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "build": "tsc",
-    "start": "tsc && node dist/index.js"
+    "start": "tsc && node -r ../load-env.js dist/index.js",
+    "dev": "tsx -r ../load-env.js index.ts"
   },
   "author": "temasar",
   "license": "ISC",
@@ -14,7 +15,7 @@
     "@meshsdk/core": "^1.9.0-beta.54",
     "@meshsdk/core-csl": "^1.9.0-beta.4",
     "@meshsdk/core-cst": "^1.9.0-beta.4",
-    "@meshsdk/hydra": "^1.9.0-beta.69"
+    "@meshsdk/hydra": "^1.9.0-beta.74"
   },
   "devDependencies": {
     "@types/node": "^22.15.32",

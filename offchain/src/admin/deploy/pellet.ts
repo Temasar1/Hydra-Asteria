@@ -5,7 +5,7 @@ import {
   myWallet,
   writeScriptRefJson,
 } from "../../../utils.js";
-import { Asset, conStr0, MeshTxBuilder, mNone, none } from "@meshsdk/core";
+import { Asset, conStr0, MeshTxBuilder } from "@meshsdk/core";
 import { applyParamtoDeploy } from "../apply-param/deploy.js";
 import { resolvePlutusScriptAddress } from "@meshsdk/core-csl";
 

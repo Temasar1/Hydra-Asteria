@@ -7,22 +7,14 @@ import {
   MeshTxBuilder,
   PlutusScript,
   policyId,
-  posixTime,
   serializePlutusScript,
-  SLOT_CONFIG_NETWORK,
   stringToHex,
-  unixTimeToEnclosingSlot,
   UTxO,
 } from "@meshsdk/core";
-import {
-  blockchainProvider,
-  myWallet,
-  readScripRefJson,
-} from "../../utils.js";
+import { blockchainProvider, myWallet, readScripRefJson } from "../../utils.js";
 import { ship_mint_lovelace_fee, initial_fuel } from "../../config.js";
 import { admintoken } from "../../config.js";
-import { fromScriptRef} from "@meshsdk/core-cst";
-import { maestroprovider } from "../../utils.js";
+import { fromScriptRef } from "@meshsdk/core-cst";
 
 const changeAddress = await myWallet.getChangeAddress();
 const collateral: UTxO = (await myWallet.getCollateral())[0]!;
@@ -94,25 +86,17 @@ async function createShip(posX: number, posY: number) {
   const fuelTokenName = stringToHex("FUEL");
   const shipTokenName = stringToHex(
     "SHIP" + asteriaInputShipcounter.toString()
-  ); 
+  );
   const pilotTokenName = stringToHex(
     "PILOT" + asteriaInputShipcounter.toString()
-  ); 
-
-  const upperBoundTime = Date.now() + 5 * 60 * 1000;
+  );
 
   const shipDatum = conStr0([
     integer(posX),
     integer(posY),
     assetName(shipTokenName),
     assetName(pilotTokenName),
-    posixTime(upperBoundTime),
   ]);
-
-  const tx_latest_slot = unixTimeToEnclosingSlot(
-    upperBoundTime,
-    SLOT_CONFIG_NETWORK.preprod
-  );
 
   const assetToSpacetimeAddress: Asset[] = [
     {
@@ -149,7 +133,7 @@ async function createShip(posX: number, posY: number) {
 
   const txBuilder = new MeshTxBuilder({
     submitter: blockchainProvider,
-    fetcher: maestroprovider,
+    fetcher: blockchainProvider,
     evaluator: blockchainProvider,
     verbose: true,
   });
@@ -178,7 +162,6 @@ async function createShip(posX: number, posY: number) {
     .txOut(spacetimeAddress, assetToSpacetimeAddress)
     .txOutInlineDatumValue(shipDatum, "JSON")
     .txOut(myWallet.addresses.baseAddressBech32!, pilotTokenAsset)
-    .invalidHereafter(tx_latest_slot)
     .txInCollateral(collateral.input.txHash, collateral.input.outputIndex)
     .selectUtxosFrom(utxos)
     .changeAddress(changeAddress)

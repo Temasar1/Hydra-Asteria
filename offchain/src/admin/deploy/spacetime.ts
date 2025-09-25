@@ -1,9 +1,4 @@
-import {
-  admin_token,
-  fuel_per_step,
-  max_ship_fuel,
-  max_speed,
-} from "../../../const.js";
+import { admin_token, fuel_per_step, max_ship_fuel } from "../../../const.js";
 import {
   blockchainProvider,
   myWallet,
@@ -49,7 +44,6 @@ const spacetimeScript = applyParamtoSpacetime(
   scriptHash(pelletScriptHash!),
   scriptHash(asteriaScriptHash!),
   admin_token,
-  max_speed,
   max_ship_fuel,
   fuel_per_step
 );

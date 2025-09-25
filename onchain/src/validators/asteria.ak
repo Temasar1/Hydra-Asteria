@@ -2,7 +2,6 @@ use aiken/collection/dict
 use aiken/collection/list
 use aiken/collection/pairs
 use aiken/crypto.{ScriptHash}
-use aiken/interval.{Finite}
 use aiken/math/rational.{compare_with, from_int}
 use aiken/option
 use aiken/primitive/bytearray.{concat, from_string, starts_with}
@@ -35,7 +34,7 @@ validator asteria(
     utxo: OutputReference,
     self: Transaction,
   ) {
-    let Transaction { inputs, outputs, mint, validity_range, redeemers, .. } =
+    let Transaction { inputs, outputs, mint, redeemers, .. } =
       self
     expect Some(datum) = datum
     let AsteriaDatum { ship_counter, shipyard_policy } = datum
@@ -91,8 +90,7 @@ validator asteria(
           pos_x,
           pos_y,
           ship_token_name,
-          pilot_token_name,
-          last_move_latest_time,
+          pilot_token_name
         } = ship_datum
         let must_respect_min_distance =
           utils.distance(pos_x, pos_y) >= min_asteria_distance
@@ -106,15 +104,10 @@ validator asteria(
             "PILOT",
             from_string(string.from_int(ship_counter)),
           )
-        let must_have_latest_time = {
-          expect Finite(tx_latest_time) = validity_range.upper_bound.bound_type
-          last_move_latest_time >= tx_latest_time
-        }
         let ship_must_have_correct_datum = and {
             must_respect_min_distance?,
             must_have_ship_name?,
             must_have_pilot_name?,
-            must_have_latest_time?,
           }
 
         // check for correct creation of ship UTxO: check value
@@ -219,16 +212,12 @@ validator asteria(
           pos_y,
           ship_token_name,
           pilot_token_name: _pilot_token_name,
-          last_move_latest_time,
+          // last_move_latest_time, // removed
         } = ship_datum
 
         let ship_must_have_asteria_position = (pos_x, pos_y) == (0, 0)
 
-        let ship_must_respect_latest_time = {
-          expect Finite(tx_earliest_time) =
-            validity_range.lower_bound.bound_type
-          last_move_latest_time <= tx_earliest_time
-        }
+        // removed ship_must_respect_latest_time
 
         // check minting
         // TODO: we can also just burn all ship_value without lovelace:
@@ -247,7 +236,6 @@ validator asteria(
           ship_must_be_valid?,
           ship_must_have_correct_redeemer?,
           ship_must_have_asteria_position?,
-          ship_must_respect_latest_time?,
           must_burn_expected_value?,
         }
       }

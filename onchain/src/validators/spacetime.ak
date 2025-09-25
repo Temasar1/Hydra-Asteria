@@ -2,8 +2,6 @@ use aiken/collection/dict
 use aiken/collection/list
 use aiken/collection/pairs
 use aiken/crypto.{ScriptHash}
-use aiken/interval.{Finite}
-use aiken/math/rational
 use aiken/option
 use asteria/types.{
   AddNewShip, AssetClass, BurnShip, GatherFuel, Mine, MineAsteria, MintShip,
@@ -22,7 +20,6 @@ validator spacetime(
   pellet_validator_address: ScriptHash,
   asteria_validator_address: ScriptHash,
   admin_token: AssetClass,
-  max_speed: Speed,
   max_ship_fuel: Int,
   fuel_per_step: Int,
 ) {
@@ -33,7 +30,7 @@ validator spacetime(
     utxo: OutputReference,
     self: Transaction,
   ) {
-    let Transaction { inputs, outputs, mint, validity_range, redeemers, .. } =
+    let Transaction { inputs, outputs, mint, redeemers, .. } =
       self
     expect Some(datum) = datum
     let ShipDatum {
@@ -41,11 +38,9 @@ validator spacetime(
       pos_y,
       ship_token_name,
       pilot_token_name,
-      last_move_latest_time,
     } = datum
 
-    expect Some(max_speed_rational) =
-      rational.new(max_speed.distance, max_speed.time)
+    // Remove max_speed_rational and all time logic
     expect Some(ship_input) = find_input(inputs, utxo)
     expect Script(shipyard_policy) =
       ship_input.output.address.payment_credential
@@ -86,20 +81,11 @@ validator spacetime(
 
     when redeemer is {
       MoveShip(delta_x, delta_y) -> {
-        expect Finite(tx_earliest_time) = validity_range.lower_bound.bound_type
-        expect Finite(tx_latest_time) = validity_range.upper_bound.bound_type
+        // Removed all time and speed checks
 
         // calculate moving distance and required fuel
         let distance = utils.distance(delta_x, delta_y)
         let required_fuel = utils.required_fuel(distance, fuel_per_step)
-
-        let must_respect_max_speed = {
-          expect Some(speed) =
-            rational.new(distance, tx_latest_time - tx_earliest_time)
-          rational.compare_with(speed, <=, max_speed_rational)
-        }
-
-        let must_respect_latest_time = last_move_latest_time <= tx_earliest_time
 
         // check for correct ship output
         expect [ship_output] =
@@ -122,10 +108,9 @@ validator spacetime(
             pos_y: pos_y + delta_y,
             ship_token_name,
             pilot_token_name,
-            last_move_latest_time: ship_out_datum.last_move_latest_time,
           }
         let must_have_correct_datum =
-          expected_ship_datum == ship_out_datum && ship_out_datum.last_move_latest_time >= tx_latest_time
+          expected_ship_datum == ship_out_datum
 
         // check for correct ship output value
         let must_have_correct_value = {
@@ -144,8 +129,6 @@ validator spacetime(
         and {
           must_include_pilot_token?,
           must_spend_one_ship_input?,
-          must_respect_max_speed?,
-          must_respect_latest_time?,
           must_have_correct_datum?,
           must_have_correct_value?,
           must_burn_spent_fuel?,

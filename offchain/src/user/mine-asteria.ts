@@ -11,12 +11,7 @@ import {
   stringToHex,
   UTxO,
 } from "@meshsdk/core";
-import {
-  blockchainProvider,
-  myWallet,
-  readScripRefJson,
-  tx_earliest_slot,
-} from "../../utils.js";
+import { blockchainProvider, myWallet, readScripRefJson } from "../../utils.js";
 import { fromScriptRef, resolvePlutusScriptAddress } from "@meshsdk/core-cst";
 import { admintoken, max_asteria_mining } from "../../config.js";
 
@@ -90,7 +85,6 @@ async function mineAsteria(ship_tx_hash: string) {
   const ship_datum_posY: number = shipInputDatum[1].int;
   const ship_datum_shipTokenName: string = shipInputDatum[2].bytes;
   const ship_datum_pilotTokenName: string = shipInputDatum[3].bytes;
-  const ship_datum_LastMoveLatestTime: number = shipInputDatum[4].int;
 
   //get asteria datum
   const asteriaInputdata = asteria.output.plutusData;
@@ -172,7 +166,6 @@ async function mineAsteria(ship_tx_hash: string) {
 
     .txOut(myWallet.addresses.baseAddressBech32!, pilotAssets)
     .txInCollateral(collateral.input.txHash, collateral.input.outputIndex)
-    .invalidBefore(tx_earliest_slot)
     .selectUtxosFrom(utxos)
     .changeAddress(changeAddress)
     .setNetwork("preprod")

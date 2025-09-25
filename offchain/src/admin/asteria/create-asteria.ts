@@ -7,9 +7,9 @@ import {
   policyId,
 } from "@meshsdk/core";
 import {
-  myWallet,
   blockchainProvider,
   readScripRefJson,
+  myWallet,
 } from "../../../utils.js";
 import { fromScriptRef, resolvePlutusScriptAddress } from "@meshsdk/core-cst";
 import { admintoken } from "../../../config.js";
@@ -44,13 +44,14 @@ export async function createAsteria() {
   const shipyardPolicyId = spacetimeUtxo[0].output.scriptHash;
 
   const asteriaDatum = conStr0([
-    integer(0), //shipcounter
+    integer(0),
     policyId(shipyardPolicyId!), //policyId
   ]);
-
-  console.log(asteriaDatum);
-
-  const admintokenAsset: Asset[] = [
+  const totalRewardsAsset: Asset[] = [
+    {
+      unit: "lovelace",
+      quantity: "200000000", //200ADA for asteria prize
+    },
     {
       unit: admintoken.policyid + admintoken.name,
       quantity: "1",
@@ -63,7 +64,7 @@ export async function createAsteria() {
   });
 
   const unsignedTx = await txBuilder
-    .txOut(asteriaValidatorAddress, admintokenAsset)
+    .txOut(asteriaValidatorAddress, totalRewardsAsset)
     .txOutInlineDatumValue(asteriaDatum, "JSON")
     .selectUtxosFrom(utxos)
     .changeAddress(changeAddress)
@@ -74,32 +75,3 @@ export async function createAsteria() {
   const asteriaTxhash = await myWallet.submitTx(signedTx);
   return asteriaTxhash;
 }
-
-export const createSpendingTest = async () => {
-  const totalRewardsAsset: Asset[] = [
-    {
-      unit: "lovelace",
-      quantity: "2000000",
-    },
-    {
-      unit: admintoken.policyid + admintoken.name,
-      quantity: "1",
-    },
-  ];
-
-  const txBuilder = new MeshTxBuilder({
-    fetcher: blockchainProvider,
-    verbose: true,
-  });
-
-  const unsignedTx = await txBuilder
-    .txOut(myWallet.addresses.baseAddressBech32!, totalRewardsAsset)
-    .selectUtxosFrom(utxos)
-    .changeAddress(changeAddress)
-    .setNetwork("preprod")
-    .complete();
-
-  const signedTx = await myWallet.signTx(unsignedTx);
-  const Txhash = await myWallet.submitTx(signedTx);
-  return Txhash;
-};
