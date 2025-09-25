@@ -1,7 +1,6 @@
 use aiken/collection/dict
 use aiken/collection/list.{filter}
 use aiken/collection/pairs
-use aiken/interval.{Finite}
 use aiken/option
 use aiken/primitive/bytearray.{starts_with}
 use asteria/types.{
@@ -24,7 +23,7 @@ validator pellet(admin_token: AssetClass) {
     utxo: OutputReference,
     self: Transaction,
   ) {
-    let Transaction { inputs, outputs, mint, validity_range, redeemers, .. } =
+    let Transaction { inputs, outputs, mint, redeemers, .. } =
       self
 
     expect Some(pellet_input) = find_input(inputs, utxo)
@@ -115,18 +114,14 @@ validator pellet(admin_token: AssetClass) {
         expect ShipDatum {
           pos_x: ship_pos_x,
           pos_y: ship_pos_y,
-          last_move_latest_time,
+          // last_move_latest_time, // removed
           ..
         } = ship_datum
 
         let ship_must_have_correct_position =
           (pos_x, pos_y) == (ship_pos_x, ship_pos_y)
 
-        let must_respect_latest_time = {
-          expect Finite(tx_earliest_time) =
-            validity_range.lower_bound.bound_type
-          last_move_latest_time <= tx_earliest_time
-        }
+        // let must_respect_latest_time = { ... } // removed
 
         let must_not_mint = mint == zero
 
@@ -144,7 +139,7 @@ validator pellet(admin_token: AssetClass) {
           ship_must_be_valid?,
           ship_must_have_correct_redeemer?,
           ship_must_have_correct_position?,
-          must_respect_latest_time?,
+          // must_respect_latest_time?, // removed
           must_not_mint?,
           must_spend_two_script_inputs?,
         }

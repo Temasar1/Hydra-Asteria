@@ -18,7 +18,6 @@ pub type ShipDatum {
   pos_y: Int,
   ship_token_name: AssetName,
   pilot_token_name: AssetName,
-  last_move_latest_time: PosixTime,
 }
 
 pub type ShipRedeemer {
