@@ -27,31 +27,24 @@ const GameSetup: React.FC = () => {
   const [hydraUrl, setHydraUrl] = useState<string>("");
 
   useEffect(() => {
-    const handleCreateShipCoordinates = (data: {
-      coordinatesArray: Ship[];
-    }) => {
-      console.log("Received createship-coordinates:", data);
+    socket.emit("request-pellets");
+
+    socket.on("pellets-coordinates", (data: { pelletsCoordinates: Pellet[] }) => {
+      setPendingPellets(data.pelletsCoordinates || []);
+    });
+
+    socket.on("createship-coordinates", (data: { coordinatesArray: Ship[] }) => {
       setPendingShips(data.coordinatesArray);
-    };
-
-    const handlePelletsCoordinates = (data: {
-      pelletsCoordinates: Pellet[];
-    }) => {
-      console.log("Received pellets-coordinates:", data);
-      setPendingPellets(data.pelletsCoordinates);
-    };
-
-    socket.on("createship-coordinates", handleCreateShipCoordinates);
-    socket.on("pellets-coordinates", handlePelletsCoordinates);
+    });
 
     return () => {
-      socket.off("createship-coordinates", handleCreateShipCoordinates);
-      socket.off("pellets-coordinates", handlePelletsCoordinates);
+      socket.off("pellets-coordinates");
+      socket.off("createship-coordinates");
     };
   }, [socket]);
 
   useEffect(() => {
-    if (pendingShips.length > 0 && pendingPellets.length > 0 && isLoading) {
+    if (pendingShips.length > 0 && isLoading) {
       localStorage.setItem(
         "initialGameState",
         JSON.stringify({
@@ -64,7 +57,7 @@ const GameSetup: React.FC = () => {
       setIsLoading(false);
       router.push("/start");
     }
-  }, [pendingShips, pendingPellets, isLoading, router, username]);
+  }, [pendingShips, isLoading, router, username, pendingPellets, hydraUrl]);
 
   const handleCreateGame = (e: React.FormEvent) => {
     e.preventDefault();
@@ -101,29 +94,57 @@ const GameSetup: React.FC = () => {
       return { id: index, x, y };
     });
 
-    console.log("Emitting initial-shipCoordinates:", {
-      username,
-      ships: shipProps,
-    });
-
+    socket.emit("hydra-url", { hydraUrl });
     socket.emit("initial-shipCoordinates", {
       shipProperty: { username, ships: shipProps },
     });
-    socket.emit("hydra-url", {
-      hydraUrl,
-    });
   };
 
-  // Custom style for placeholder font
   const inputPlaceholderStyle = {
     fontFamily: "'monocraft', 'monospace', 'DM Sans', 'sans-serif'",
     letterSpacing: "0.03em",
   };
 
+  const pelletToPercent = (val: number) => {
+    return `${((val + 50) / 100) * 100}%`;
+  };
+
   return (
-    <div className="fixed bottom-5 left-0 w-full flex items-center justify-center bg-transparent z-30 ">
-      <div className="relative z-20 flex items-center rounded-lg justify-between w-full max-w-5xl px-6 py-4 bg-[#e9ebee] border-t-4  backdrop-blur-md shadow-2xl">
-        {/* Left: Score and Username */}
+    <>
+      {/* Show pellets immediately */}
+      {pendingPellets.map((node) => (
+        <div
+          key={node.id}
+          className="absolute group z-20"
+          style={{
+            left: pelletToPercent(node.x),
+            top: pelletToPercent(node.y),
+            transform: "translate(-50%, -50%)",
+          }}
+        >
+          <img src="/fuel.svg" alt="pellet" className="w-6 h-6" />
+          <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 hidden group-hover:block bg-black bg-opacity-70 text-white text-xs rounded-md border border-gray-300 px-2 py-1 whitespace-nowrap z-50">
+            ID: {node.id}, Fuel: {node.fuel}
+            <br />
+            ({node.x}, {node.y})
+          </div>
+        </div>
+      ))}
+      
+      {/* Show Asteria */}
+      <img
+        src="/asteria-light.png"
+        alt="asteria"
+        className="absolute w-20 h-20 z-10"
+        style={{
+          left: "50%",
+          top: "50%",
+          transform: "translate(-50%, -50%)",
+        }}
+      />
+
+      <div className="fixed bottom-5 left-0 w-full flex items-center justify-center bg-transparent z-30">
+        <div className="relative z-20 flex items-center rounded-lg justify-between w-full max-w-5xl px-6 py-4 bg-[#e9ebee] border-t-4 backdrop-blur-md shadow-2xl">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 bg-grey-700 rounded-full flex items-center justify-center text-black font-monocraft-regular text-base border-2 border-black">
             0
@@ -132,8 +153,6 @@ const GameSetup: React.FC = () => {
             {username || "Player"}
           </div>
         </div>
-
-        {/* Center: Form Inputs */}
         <form onSubmit={handleCreateGame} className="flex items-center gap-4">
           <input
             type="url"
@@ -188,8 +207,6 @@ const GameSetup: React.FC = () => {
             Start
           </button>
         </form>
-
-        {/* Right: Status Messages */}
         <div className="flex items-center gap-3">
           {error && (
             <p className="text-red-300 font-monocraft-regular text-sm bg-[#2a1a1a80] rounded py-1 px-2 border border-black-400">
@@ -203,7 +220,9 @@ const GameSetup: React.FC = () => {
           )}
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 };
+
 export default GameSetup;

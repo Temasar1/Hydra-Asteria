@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState } from "react";
 import getSocket from "../../../apis/connection";
 import GameSetup from "@/components/setup";
@@ -23,46 +22,44 @@ const GameStart: React.FC = () => {
   const [ships, setShips] = useState<Ship[]>([]);
   const [pellets, setPellets] = useState<Pellet[]>([]);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const [showSetup, setShowSetup] = useState(true);
+  const [username, setUsername] = useState<string>("");
   const socket = getSocket();
 
   useEffect(() => {
     const initialState = localStorage.getItem("initialGameState");
     if (initialState) {
-      const { ships: initialShips, pellets: initialPellets } = JSON.parse(initialState);
-      console.log("Loaded initial state from localStorage:", { initialShips, initialPellets });
-      setShips(initialShips);
-      setPellets(initialPellets);
+      const parsed = JSON.parse(initialState);
+      setShips(parsed.ships || []);
+      setPellets(parsed.pellets || []);
+      setUsername(parsed.username || "Player");
+      if (parsed.ships && parsed.ships.length > 0) {
+        setShowSetup(false);
+      }
     }
 
-    containerRef.current?.focus();
-
-    socket.on("createship-coordinates", (data: { coordinatesArray: Ship[] }) => {
-      console.log("Received createship-coordinates:", data);
-      setShips(data.coordinatesArray);
+    socket.on("pellets-coordinates", (data: { pelletsCoordinates: Pellet[] }) => {
+      setPellets(data.pelletsCoordinates || []);
     });
 
-    socket.on("pellets-coordinates", (data: { pelletsCoordinates: Pellet[] }) => {
-      console.log("Received pellets-coordinates:", data);
-      setPellets(data.pelletsCoordinates);
+    socket.on("createship-coordinates", (data: { coordinatesArray: Ship[] }) => {
+      setShips(data.coordinatesArray);
+      setShowSetup(false);
     });
 
     socket.on("ship-moved", (data: { ship: Ship }) => {
-      console.log("Received ship-moved:", data);
       setShips((prev) => prev.map((s) => (s.id === data.ship.id ? data.ship : s)));
     });
 
     socket.on("pellet-collected", (data: { pelletId: number }) => {
-      console.log("Received pellet-collected:", data);
       setPellets((prev) => prev.filter((p) => p.id !== data.pelletId));
     });
 
     socket.on("asteria-mined", (data: { username: string }) => {
-      console.log("Received asteria-mined:", data);
       alert(`${data.username} has mined Asteria! Game Over!`);
     });
 
     socket.on("game-cleared", (data: { username: string; message: string }) => {
-      console.log("Game cleared:", data.message);
       setShips([]);
       setPellets([]);
       setSelectedIndex(null);
@@ -70,13 +67,12 @@ const GameStart: React.FC = () => {
     });
 
     socket.on("error", (data: { message: string }) => {
-      console.error("Server error:", data.message);
       alert(`Error: ${data.message}`);
     });
 
     return () => {
-      socket.off("createship-coordinates");
       socket.off("pellets-coordinates");
+      socket.off("createship-coordinates");
       socket.off("ship-moved");
       socket.off("pellet-collected");
       socket.off("asteria-mined");
@@ -88,15 +84,11 @@ const GameStart: React.FC = () => {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (selectedIndex === null || selectedIndex < 0 || selectedIndex >= ships.length) {
-        console.warn("No ship selected or invalid index:", selectedIndex);
         return;
       }
 
       const ship = ships[selectedIndex];
-      if (!ship) {
-        console.error("Ship not found at index:", selectedIndex);
-        return;
-      }
+      if (!ship) return;
 
       let dx = 0;
       let dy = 0;
@@ -118,7 +110,6 @@ const GameStart: React.FC = () => {
           return;
       }
 
-      console.log("Emitting ship-moved:", { id: ship.id, dx, dy });
       socket.emit("ship-moved", { id: ship.id, dx, dy });
     };
 
@@ -129,17 +120,17 @@ const GameStart: React.FC = () => {
   const handleShipClick = (index: number) => {
     setSelectedIndex(index);
     containerRef.current?.focus();
-    console.log("Selected ship at index:", index, ships[index]);
   };
 
   const handleQuit = () => {
-    const username = "currentUser";
-    socket.emit("quit", { username });
+    const storedUsername = JSON.parse(localStorage.getItem("initialGameState") || "{}").username || "currentUser";
+    socket.emit("quit", { username: storedUsername });
     localStorage.removeItem("initialGameState");
-    console.log("Game state cleared from localStorage");
   };
 
-  const toPercent = (val: number) => `${((val + 50) / gridSize) * 100}%`;
+  const toPercent = (val: number) => `${((val + 50) / 100) * 100}%`;
+
+  const pelletToPercent = (val: number) => `${((val + 50) / 100) * 100}%`;
 
   return (
     <div
@@ -157,8 +148,8 @@ const GameStart: React.FC = () => {
           key={node.id}
           className="absolute group"
           style={{
-            left: toPercent(node.x),
-            top: toPercent(node.y),
+            left: pelletToPercent(node.x),
+            top: pelletToPercent(node.y),
             transform: "translate(-50%, -50%)",
           }}
         >
@@ -182,24 +173,33 @@ const GameStart: React.FC = () => {
         }}
       />
       {ships.map((s, index) => (
-        <img
+        <div
           key={s.id}
-          src="/landing-ship-1.svg"
-          alt="ship"
-          className={`absolute w-6 h-6 cursor-pointer ${
-            index === selectedIndex ? "ring-2 ring-yellow-400" : ""
-          }`}
+          className="absolute group"
           style={{
             left: toPercent(s.x),
             top: toPercent(s.y),
             transform: "translate(-50%, -50%)",
             zIndex: index === selectedIndex ? 10 : 1,
           }}
-          onClick={(e) => {
-            e.stopPropagation();
-            handleShipClick(index);
-          }}
-        />
+        >
+          <img
+            src="/landing-ship-1.svg"
+            alt="ship"
+            className={`w-6 h-6 cursor-pointer ${
+              index === selectedIndex ? "ring-2 ring-yellow-400" : ""
+            }`}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleShipClick(index);
+            }}
+          />
+          <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 hidden group-hover:block bg-black bg-opacity-70 text-white text-xs rounded-md border border-gray-300 px-2 py-1 whitespace-nowrap z-50">
+            ID: {s.id}
+            <br />
+            ({s.x}, {s.y})
+          </div>
+        </div>
       ))}
       <div
         className="absolute border-2 border-gray-400 bg-transparent pointer-events-none"
@@ -219,6 +219,9 @@ const GameStart: React.FC = () => {
           (0, 0)
         </span>
       </div>
+      <div className="absolute top-4 left-4 bg-black bg-opacity-70 text-white py-2 px-4 rounded-md text-lg">
+        {username} - Ships: {ships.length}
+      </div>
       <div className="absolute bottom-4 right-4 bg-black bg-opacity-70 text-white py-2 px-4 rounded-md text-lg">
         <button
           type="button"
@@ -228,30 +231,20 @@ const GameStart: React.FC = () => {
           quit
         </button>
       </div>
-      {/* Game Setup overlay */}
-      <div
-        style={{
-          position: "fixed",
-          inset: 0,
-          zIndex: 1000,
-          width: "100vw",
-          height: "100vh",
-          background: "inherit"
-        }}
-      >
-        <GameSetup />
-      </div>
-      {/* Decorative floating elements */}
-      <img
-        src="/landing-fuel-1.svg"
-        className="absolute bottom-8 left-8 w-16 h-16 animate-float-slow opacity-80 z-10"
-        alt="Fuel"
-      />
-      <img
-        src="/landing-ship-2.svg"
-        className="absolute top-8 right-8 w-16 h-16 animate-float-fast opacity-80 z-10"
-        alt="Ship"
-      />
+      {showSetup && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 1000,
+            width: "100vw",
+            height: "100vh",
+            background: "inherit",
+          }}
+        >
+          <GameSetup />
+        </div>
+      )}
     </div>
   );
 };

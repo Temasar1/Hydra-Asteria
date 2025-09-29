@@ -1,8 +1,16 @@
-import { deployAsteria } from "./src/admin/deploy/asteria.js";
-import { deployPellet } from "./src/admin/deploy/pellet.js";
+export * from "./src/admin/asteria/create-asteria.js";
+export * from "./src/admin/asteria/consume-asteria.js";
+export * from "./src/admin/pellet/create-pellet-test.js";
+export * from "./src/admin/pellet/consume-pellet.js";
+export * from "./src/user/create-ship.js";
+export * from "./src/user/move-ship.js";
+export * from "./src/user/gather-fuel.js";
+export * from "./src/user/mine-asteria.js";
+export * from "./src/user/quit.js";
 
-const txHash = await deployPellet();
-console.log(txHash);
+import { moveShip } from "./src/user/move-ship.js";
+const txhash = await moveShip(1,1,"dd4ab052c8fc8576a254b9b2b4327596f099283e69261058edb974426cdf4501")
+console.log("txhash", txhash);
 
 //In every game interaction, ship utxo is being created
 //First step deploy pellet then deploy following validators
