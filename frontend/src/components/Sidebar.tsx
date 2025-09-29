@@ -42,16 +42,11 @@ const Sidebar: React.FunctionComponent = () => {
         <p className="font-dmsans-regular text-sm text-[#757575] mb-3 mt-8">
           GUIDES
         </p>
+        <Item href="/how-to-play/hydra-setup">Mesh hydra</Item>
         <Item href="/how-to-play/build-ship">Build Ship</Item>
         <Item href="/how-to-play/move-ship">Move Ship</Item>
         <Item href="/how-to-play/gather-fuel">Gather Fuel</Item>
         <Item href="/how-to-play/mine-asteria">Mine Asteria</Item>
-        <Item href="/how-to-play/backend-api">Backend API</Item>
-
-        <p className="font-dmsans-regular text-sm text-[#757575] mb-3 mt-8">
-          CHALLENGES
-        </p>
-        <Item href="/how-to-play/preview-challenge">Preview Challenge</Item>
 
       </div>
     </div>
