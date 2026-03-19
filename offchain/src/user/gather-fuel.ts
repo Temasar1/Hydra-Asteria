@@ -16,9 +16,6 @@ import { blockchainProvider, myWallet, readScripRefJson } from "../../utils.js";
 import { fromScriptRef } from "@meshsdk/core-cst";
 import { admintoken } from "../../config.js";
 
-const changeAddress = await myWallet.getChangeAddress();
-const collateral: UTxO = (await myWallet.getCollateral())[0]!;
-const utxos = await myWallet.getUtxos();
 
 async function gatherFuel(
   ship_tx_hash: string,
@@ -26,6 +23,11 @@ async function gatherFuel(
   pellet_tx_index: number,
   gather_amount: number
 ) {
+
+  const changeAddress = await myWallet.getChangeAddress();
+  const collateral: UTxO = (await myWallet.getCollateral())[0]!;
+  const utxos = await myWallet.getUtxos();
+  
   const spacetimeDeployScript = await readScripRefJson("spacetimeref");
   if (!spacetimeDeployScript.txHash) {
     throw Error("spacetime script-ref not found, deploy spacetime first.");
@@ -173,6 +175,7 @@ async function gatherFuel(
     .txIn(pellet.input.txHash, pellet.input.outputIndex)
     .txInRedeemerValue(pelletRedemer, "JSON")
     .spendingTxInReference(pelletDeployScript.txHash, 0)
+
     .txInInlineDatumPresent()
     .txOut(spacetimeAddress, spacetimeOutputAssets)
     .txOutInlineDatumValue(shipOutDatum, "JSON")

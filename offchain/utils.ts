@@ -23,24 +23,11 @@ export const hydra_api_url = process.env.HYDRA_API_URL;
 if (hydra_api_url == undefined) {
   throw new Error("Enter your hydra api url in an env file");
 }
-export const hydraProvider = new HydraProvider({
-  httpUrl: hydra_api_url,
-});
 
 export const myWallet = new MeshWallet({
   networkId: 0,
   fetcher: blockchainProvider,
   submitter: blockchainProvider,
-  key: {
-    type: "mnemonic",
-    words: seedPhrase,
-  },
-});
-
-export const hydraWallet = new MeshWallet({
-  networkId: 0,
-  fetcher: hydraProvider,
-  submitter: hydraProvider,
   key: {
     type: "mnemonic",
     words: seedPhrase,
@@ -62,7 +49,7 @@ export const tx_earliest_slot = Number(slot) - 60;
 //export const tx_earliest_posix_time = time - 60 * 1000;     //- 1 minute from now
 
 const __dirname = process.cwd();
-const __filedir = join(__dirname, "src/admin/deploy/ref-script/");
+const __filedir = join(__dirname, "offchain/src/admin/deploy/ref-script/");
 
 export const writeScriptRefJson = async (filename: string, txHash: string) => {
   await writeFile(

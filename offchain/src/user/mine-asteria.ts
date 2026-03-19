@@ -15,11 +15,12 @@ import { blockchainProvider, myWallet, readScripRefJson } from "../../utils.js";
 import { fromScriptRef, resolvePlutusScriptAddress } from "@meshsdk/core-cst";
 import { admintoken, max_asteria_mining } from "../../config.js";
 
-const changeAddress = await myWallet.getChangeAddress();
-const collateral: UTxO = (await myWallet.getCollateral())[0]!;
-const utxos = await myWallet.getUtxos();
 
 async function mineAsteria(ship_tx_hash: string) {
+  const changeAddress = await myWallet.getChangeAddress();
+  const collateral: UTxO = (await myWallet.getCollateral())[0]!;
+  const utxos = await myWallet.getUtxos();
+  
   const spacetimeDeployScript = await readScripRefJson("spacetimeref");
   if (!spacetimeDeployScript.txHash) {
     throw Error("spacetime script-ref not found, deploy spacetime first.");

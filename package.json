@@ -9,8 +9,9 @@
   "scripts": {
     "build": "tsc && npm run copy-assets",
     "copy-assets": "copyfiles \"backend/**/*.{json,csv}\" \"offchain/**/*.{json,csv}\" dist",
+    "dev-offchain": "tsx -r ./load-env.js ./offchain/index.ts",
     "dev": "concurrently \"npm --prefix frontend run dev\" \"tsx -r ./load-env.js backend/index.ts\"",
-    "start": "node -r ./load-env.js dist/offchain/index.js",
+    "start": "tsx -r ./load-env.js ./offchain/index.ts",
     "start:backend": "tsx -r ./load-env.js backend/index.ts",
     "start:offchain": "tsx -r ./load-env.js offchain/index.ts"
   },

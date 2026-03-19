@@ -8,9 +8,6 @@ export * from "./src/user/gather-fuel.js";
 export * from "./src/user/mine-asteria.js";
 export * from "./src/user/quit.js";
 
-import { moveShip } from "./src/user/move-ship.js";
-const txhash = await moveShip(1,1,"dd4ab052c8fc8576a254b9b2b4327596f099283e69261058edb974426cdf4501")
-console.log("txhash", txhash);
 
 //In every game interaction, ship utxo is being created
 //First step deploy pellet then deploy following validators

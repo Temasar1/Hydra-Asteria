@@ -4,7 +4,7 @@ let socket: Socket | null = null;
 
 const getSocket = (): Socket => {
   if (!socket) {
-    socket = io("http://localhost:3002", {
+    socket = io("http://localhost:3003", {
       reconnection: true,
       reconnectionAttempts: 5,
       reconnectionDelay: 3000,

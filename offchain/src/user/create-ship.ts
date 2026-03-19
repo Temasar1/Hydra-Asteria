@@ -8,19 +8,23 @@ import {
   PlutusScript,
   policyId,
   serializePlutusScript,
+  SLOT_CONFIG_NETWORK,
+  slotToBeginUnixTime,
   stringToHex,
+  unixTimeToEnclosingSlot,
   UTxO,
 } from "@meshsdk/core";
 import { blockchainProvider, myWallet, readScripRefJson } from "../../utils.js";
 import { ship_mint_lovelace_fee, initial_fuel } from "../../config.js";
 import { admintoken } from "../../config.js";
-import { fromScriptRef } from "@meshsdk/core-cst";
+import { fromScriptRef, Slot } from "@meshsdk/core-cst";
 
-const changeAddress = await myWallet.getChangeAddress();
-const collateral: UTxO = (await myWallet.getCollateral())[0]!;
-const utxos = await myWallet.getUtxos();
 
 async function createShip(posX: number, posY: number) {
+  const changeAddress = await myWallet.getChangeAddress();
+  const collateral: UTxO = (await myWallet.getCollateral())[0]!;
+  const utxos = await myWallet.getUtxos();
+  
   const asteriaDeployScript = await readScripRefJson("asteriaref");
   if (!asteriaDeployScript.txHash) {
     throw new Error("asteria script-ref not found, deploy asteria first.");
@@ -64,7 +68,12 @@ async function createShip(posX: number, posY: number) {
     admintoken.policyid + admintoken.name
   );
 
+
+  const slotConfig = SLOT_CONFIG_NETWORK.mainnet
+  const beginTime =  slotToBeginUnixTime(2,slotConfig) //example
+
   const asteria = asteriaInputUtxos[0];
+
   if (!asteria) {
     throw new Error("create asteria first");
   }
@@ -146,14 +155,18 @@ async function createShip(posX: number, posY: number) {
     .txInInlineDatumPresent()
     .txOut(asteriaScriptAddress, totalRewardsAsset)
     .txOutInlineDatumValue(asteriaOutputDatum, "JSON")
+
+
     .mintPlutusScriptV3()
     .mint("1", shipyardPolicyid!, shipTokenName)
     .mintTxInReference(spacetimeDeployScript.txHash, 0)
     .mintRedeemerValue(mintShipRedeemer, "JSON")
+
     .mintPlutusScriptV3()
     .mint("1", shipyardPolicyid!, pilotTokenName)
     .mintTxInReference(spacetimeDeployScript.txHash, 0)
     .mintRedeemerValue(mintShipRedeemer, "JSON")
+
     .mintPlutusScriptV3()
     .mint(initial_fuel, fuelPolicyId!, fuelTokenName)
     .mintTxInReference(pelletDeployScript.txHash, 0)
@@ -161,6 +174,7 @@ async function createShip(posX: number, posY: number) {
 
     .txOut(spacetimeAddress, assetToSpacetimeAddress)
     .txOutInlineDatumValue(shipDatum, "JSON")
+
     .txOut(myWallet.addresses.baseAddressBech32!, pilotTokenAsset)
     .txInCollateral(collateral.input.txHash, collateral.input.outputIndex)
     .selectUtxosFrom(utxos)

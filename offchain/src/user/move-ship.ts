@@ -15,22 +15,22 @@ import {
   blockchainProvider,
   maestroprovider,
   myWallet,
-  readScripRefJson,
-  tx_earliest_slot,
-  tx_latest_slot,
+  readScripRefJson
 } from "../../utils.js";
 import { fromScriptRef } from "@meshsdk/core-cst";
 import { fuel_per_step } from "../../config.js";
 
-const changeAddress = await myWallet.getChangeAddress();
-const collateral: UTxO = (await myWallet.getCollateral())[0]!;
-const utxos = await myWallet.getUtxos();
 
 async function moveShip(
   delta_X: number,
   delta_Y: number,
   ship_tx_hash: string
 ) {
+
+  const changeAddress = await myWallet.getChangeAddress();
+  const collateral: UTxO = (await myWallet.getCollateral())[0]!;
+  const utxos = await myWallet.getUtxos();
+
   const spacetimeDeployScript = await readScripRefJson("spacetimeref");
   if (!spacetimeDeployScript.txHash) {
     throw new Error("spacetime script-ref not found, deploy spacetime first.");
@@ -113,11 +113,12 @@ async function moveShip(
   const burnfuelRedeemer = conStr1([]);
 
   const txbuilder = new MeshTxBuilder({
-    fetcher: maestroprovider,
-    submitter: maestroprovider,
+    fetcher: blockchainProvider,
+    submitter: blockchainProvider,
     verbose: true,
   });
 
+  console.log('ship utxos',ship)
   const unsignedTx = await txbuilder
     .spendingPlutusScriptV3()
     .txIn(ship.input.txHash, ship.input.outputIndex)
@@ -133,8 +134,6 @@ async function moveShip(
     .txOut(myWallet.getAddresses().baseAddressBech32!, pilotTokenAsset)
     .txOut(spacetimeAddress, assetsToSpacetime) //to keep index consistent move to 1 instead of 0
     .txOutInlineDatumValue(shipOutputDatum, "JSON")
-    .invalidBefore(tx_earliest_slot)
-    .invalidHereafter(tx_latest_slot)
     .txInCollateral(collateral.input.txHash, collateral.input.outputIndex)
     .changeAddress(changeAddress)
     .selectUtxosFrom(utxos)
